@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DetailCustomerActivity"
+    android:orientation="vertical"
+    android:background="#fff">
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/toolbar_DetailCustomer"
+        app:title="Chi tiết khách hàng"/>
+    <LinearLayout
+        android:background="@drawable/bg_item2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textStyle="bold"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="Tên khách hàng: "
+                android:textColor="#000"
+                android:textSize="17dp"/>
+
+            <TextView
+                android:id="@+id/customerName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#000"
+                android:textSize="17dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textStyle="bold"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="Số điện thoại: "
+                android:textColor="#000"
+                android:textSize="17dp"/>
+            <TextView
+                android:id="@+id/customerMobileNum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#000"
+                android:textSize="17dp"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textStyle="bold"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="Hóa đơn đã mua: "
+                android:textColor="#000"
+                android:textSize="17dp"/>
+            <TextView
+                android:id="@+id/qtyBought"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#000"
+                android:textSize="17dp"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textStyle="bold"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="Tổng tiền: "
+                android:textColor="#000"
+                android:textSize="17dp"/>
+            <TextView
+                android:id="@+id/totalCash"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#000"
+                android:textSize="17dp"/>
+        </LinearLayout>
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/vInvoiceList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <androidx.recyclerview.widget.RecyclerView
+            android:padding="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/recycleview_customerBought"/>
+        <TextView
+            android:visibility="gone"
+            android:layout_gravity="center"
+            android:id="@+id/tvNoAvailableInvoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Không có hóa đơn nào"
+            android:textAlignment="center"
+            android:textSize="18dp"
+            android:textStyle="bold|italic"
+            android:textColor="#000"
+            android:layout_marginTop="20dp" />
+    </FrameLayout>
+
+
+</LinearLayout>

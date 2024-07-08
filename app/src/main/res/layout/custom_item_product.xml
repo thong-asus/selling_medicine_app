@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="5dp"
+    android:layout_marginHorizontal="5dp"
+    android:padding="5dp"
+    android:orientation="horizontal"
+    android:id="@+id/linear_item_product">
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="70dp"
+        android:background="@drawable/medicine"
+        android:id="@+id/ivMedicine"
+        android:layout_marginRight="20dp"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <TextView
+                android:textColor="#000"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Tên thuốc: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/drugName"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <TextView
+                android:textColor="#000"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Chỉ định: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/indications" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <TextView
+                android:textColor="#000"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Ngày hết hạn: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/expiryDate" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+</LinearLayout>

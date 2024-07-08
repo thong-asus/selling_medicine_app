@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".CustomerListActivity"
+    android:id="@+id/vCustomerList"
+    android:background="#fff">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_customerList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="Danh sách khách hàng"/>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout style="@style/prop_textInputLayout_search_home">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/search_customerList"
+                        style="@style/prop_search_home"
+                        android:drawableLeft="@drawable/ic_search"
+                        android:hint="Tìm kiếm"
+                        android:imeOptions="actionDone"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageView
+                    android:id="@+id/btn_filter_customerList"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="4dp"
+                    android:src="@drawable/filter_corner"/>
+            </LinearLayout>
+        </LinearLayout>
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/swipeRefresh">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleview_customerList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+</LinearLayout>

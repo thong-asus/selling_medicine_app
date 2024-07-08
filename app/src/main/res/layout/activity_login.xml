@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".LoginActivity"
+    android:id="@+id/vLogin"
+    android:background="#fff">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selling Medicine"
+        android:layout_marginTop="70dp"
+        android:textSize="30dp"
+        android:textColor="#000"
+        android:gravity="center"
+        android:textStyle="bold"/>
+    <ImageView
+        android:layout_gravity="center"
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:background="@drawable/medicine_logo"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/prop_textInputLayout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/mobileNumber"
+            style="@style/prop_textInputEditText"
+            android:hint="Số điện thoại"
+            android:imeOptions="actionDone"
+            android:inputType="number" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/prop_textInputLayout"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password"
+            android:hint="Mật khẩu"
+            style="@style/prop_textInputEditText"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btnLogin"
+        style="@style/prop_Button"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_button_login_clicked"
+        android:text="Đăng nhập"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/tvForgotPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="Quên mật khẩu?" />
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <Button
+        android:id="@+id/btnRegister"
+        style="@style/prop_Button"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_button_register_clicked"
+        android:text="Đăng ký tài khoản"
+        android:textColor="#007ADA" />
+</LinearLayout>
