@@ -12,7 +12,7 @@ import vn.edu.tdc.selling_medicine_app.R;
 
 public class ItemProductViewHolder extends RecyclerView.ViewHolder {
     LinearLayout linear_item_product;
-    TextView drugName, indications, expiryDate;
+    TextView drugName, indications, expiryDate, tvNoAvailableProduct;
     ImageView ivMedicine;
     public ItemProductViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -21,5 +21,6 @@ public class ItemProductViewHolder extends RecyclerView.ViewHolder {
         indications = itemView.findViewById(R.id.indications);
         expiryDate = itemView.findViewById(R.id.expiryDate);
         ivMedicine = itemView.findViewById(R.id.ivMedicine);
+        tvNoAvailableProduct = itemView.findViewById(R.id.tvNoAvailableProduct);
     }
 }

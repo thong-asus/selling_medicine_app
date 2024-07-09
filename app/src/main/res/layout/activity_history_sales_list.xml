@@ -1,58 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".HistorySalesListActivity">
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_historySales"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    android:id="@+id/vHistorySalesList"
+    android:background="#fff"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_historySales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="Danh sách hóa đơn"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#dddddd"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_gravity="center">
 
-            <com.google.android.material.textfield.TextInputLayout style="@style/prop_textInputLayout_search_home">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/search_history_salesList"
-                    style="@style/prop_search_home"
-                    android:drawableLeft="@drawable/ic_search"
-                    android:hint="Tìm kiếm"
-                    android:imeOptions="actionDone"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/prop_textInputLayout_search_home">
 
-            <ImageView
-                android:id="@+id/btn_filter_history_salesList"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/filter_corner"/>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/search_history_salesList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/prop_search_home"
+                        android:drawableLeft="@drawable/ic_search"
+                        android:hint="Nhập tên hoặc số điện thoại khách hàng"
+                        android:imeOptions="actionNext"
+                        android:inputType="text" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageView
+                    android:id="@+id/btn_filter_history_salesList"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="4dp"
+                    android:src="@drawable/filter_corner"/>
+            </LinearLayout>
+
         </LinearLayout>
-        <TextView
+
+        <FrameLayout
+            android:id="@+id/frameHistorySalesList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Danh sách hóa đơn"
-            android:textColor="#000"
-            android:textSize="25dp"
-            android:textStyle="bold"/>
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycleview_historySales"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent">
+
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipeRefresh"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycleview_historySales"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/loading" />
+
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+            <TextView
+                android:id="@+id/tvNoAvailableHistorySales"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:text="Danh sách hóa đơn trống"
+                android:textAlignment="center"
+                android:textColor="#000"
+                android:textSize="25dp"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
     </LinearLayout>
 
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -12,7 +12,9 @@
             style="@style/prop_textInputEditText"
             android:hint="Số điện thoại"
             android:imeOptions="actionNext"
-            android:inputType="number" />
+            android:enabled="false"
+            android:inputType="number"
+            android:textColor="#dddddd"/>
     </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.textfield.TextInputLayout
         style="@style/prop_textInputLayout">

@@ -15,6 +15,22 @@ public class Product implements Serializable {
     private String expiryDate;
     private int qtyInventory;
     private int price;
+    private String dateCreated;
+
+    public Product(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtyInventory, int price, String dateCreated) {
+        this.idDrug = idDrug;
+        this.imageDrug = imageDrug;
+        this.drugName = drugName;
+        this.form = form;
+        this.strength = strength;
+        this.indications = indications;
+        this.dosage = dosage;
+        this.sideEffects = sideEffects;
+        this.expiryDate = expiryDate;
+        this.qtyInventory = qtyInventory;
+        this.price = price;
+        this.dateCreated = dateCreated;
+    }
 
     public String getIdDrug() {
         return idDrug;
@@ -104,18 +120,12 @@ public class Product implements Serializable {
         this.price = price;
     }
 
-    public Product(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtyInventory, int price) {
-        this.idDrug = idDrug;
-        this.imageDrug = imageDrug;
-        this.drugName = drugName;
-        this.form = form;
-        this.strength = strength;
-        this.indications = indications;
-        this.dosage = dosage;
-        this.sideEffects = sideEffects;
-        this.expiryDate = expiryDate;
-        this.qtyInventory = qtyInventory;
-        this.price = price;
+    public String getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(String dateCreated) {
+        this.dateCreated = dateCreated;
     }
 
     public Product() {

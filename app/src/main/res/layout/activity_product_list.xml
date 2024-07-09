@@ -13,6 +13,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:title="Danh sách sản phẩm" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#dddddd"/>
 
 
     <LinearLayout
@@ -26,13 +30,19 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <com.google.android.material.textfield.TextInputLayout style="@style/prop_textInputLayout_search_home">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                style="@style/prop_textInputLayout_search_home">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/search_productList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     style="@style/prop_search_home"
                     android:drawableLeft="@drawable/ic_search"
-                    android:hint="Tìm kiếm"
+                    android:hint="Nhập tên thuốc hoặc tác dụng của thuốc"
                     android:imeOptions="actionDone"
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -45,10 +55,11 @@
                 android:layout_marginTop="4dp"
                 android:src="@drawable/filter_corner" />
         </LinearLayout>
+
     </LinearLayout>
 
     <FrameLayout
-        android:id="@+id/vProductList"
+        android:id="@+id/frameProductList"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -58,10 +69,10 @@
             android:layout_height="match_parent">
 
             <androidx.recyclerview.widget.RecyclerView
+                android:background="@color/loading"
                 android:id="@+id/recycleview_productList"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="16dp" />
+                android:layout_height="match_parent" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <TextView
@@ -70,11 +81,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="20dp"
-            android:text="Không có sản phẩm nào"
+            android:text="Danh sách sản phẩm trống"
             android:textAlignment="center"
             android:textColor="#000"
-            android:textSize="18dp"
-            android:textStyle="bold|italic"
+            android:textSize="25dp"
+            android:textStyle="italic"
             android:visibility="gone" />
     </FrameLayout>
 

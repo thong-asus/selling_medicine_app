@@ -20,6 +20,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 
+import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class HomeActivity extends AppCompatActivity {
@@ -39,19 +40,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         //nhận dữ liệu
-        SharedPreferences sharedPreferences = getSharedPreferences("informationUser", Context.MODE_PRIVATE);
-        if (sharedPreferences.contains("informationUser")) {
-            String jsonShop = sharedPreferences.getString("informationUser", "");
-            Gson gson = new Gson();
-            user = gson.fromJson(jsonShop, User.class);
-        } else {
-            // Dữ liệu không tồn tại, có thể là người dùng đã đăng xuất hoặc lần đầu sử dụng ứng dụng
-        }
+        context = this;
+        user = ReceiveUserInfo.getUserInfo(context);
         ////////////////////////////////////////////////
         FirebaseApp.initializeApp(this);
         //Khởi tạo db
         firestore = FirebaseFirestore.getInstance();
-        context = this;
         setControl();
         setEvent();
 

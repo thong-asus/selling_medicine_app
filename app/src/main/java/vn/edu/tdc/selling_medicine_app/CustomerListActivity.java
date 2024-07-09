@@ -21,9 +21,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DataSnapshot;
@@ -33,10 +33,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
+import vn.edu.tdc.selling_medicine_app.feature.SwipeToDelete;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
-import vn.edu.tdc.selling_medicine_app.model.SwipeToDelete;
+import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
+import vn.edu.tdc.selling_medicine_app.feature.ReloadSound;
+import vn.edu.tdc.selling_medicine_app.model.User;
 import vn.edu.tdc.selling_medicine_app.recycleview.ItemCustomerAdapter;
 
 public class CustomerListActivity extends AppCompatActivity {
@@ -49,12 +56,19 @@ public class CustomerListActivity extends AppCompatActivity {
     private List<Customer> originalCustomerList = new ArrayList<>();
     private Context context;
     private SwipeRefreshLayout swipeRefresh;
+    private ReloadSound reloadSound;
+    private  User user = new User();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customer_list);
+        ////////////////////////////////////////////////////////
         context = this;
+        user = ReceiveUserInfo.getUserInfo(context);
+
+        /////////////////////////////
+        reloadSound = new ReloadSound(this);
         setInitialization();
         getAllCustomer();
         deleteACustomer();
@@ -66,6 +80,7 @@ public class CustomerListActivity extends AppCompatActivity {
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                reloadSound.playReloadSound();
                 getAllCustomer();
                 swipeRefresh.setRefreshing(false);
             }
@@ -86,8 +101,35 @@ public class CustomerListActivity extends AppCompatActivity {
 
             }
         });
+        search_customerList.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE) {
+                    hideKeyboard();
+                }
+                return false;
+            }
+        });
     }
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (reloadSound != null) {
+            reloadSound.release();
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getAllCustomer();
+    }
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
     private void setInitialization() {
         toolbar_customerList = findViewById(R.id.toolbar_customerList);
         search_customerList = findViewById(R.id.search_customerList);
@@ -103,7 +145,7 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void getAllCustomer() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers");
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/"+user.getMobileNumber());
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -116,6 +158,20 @@ public class CustomerListActivity extends AppCompatActivity {
                         originalCustomerList.add(customer);
                     }
                 }
+                Collections.sort(customerList, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return c2.getDateCreated().compareTo(c1.getDateCreated());
+                    }
+                });
+
+                Collections.sort(originalCustomerList, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return c2.getDateCreated().compareTo(c1.getDateCreated());
+                    }
+                });
+
                 itemCustomerAdapter.notifyDataSetChanged();
             }
 
@@ -125,6 +181,7 @@ public class CustomerListActivity extends AppCompatActivity {
             }
         });
     }
+
     private void deleteACustomer() {
         SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(itemCustomerAdapter, this);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeToDeleteCallback);
@@ -133,7 +190,7 @@ public class CustomerListActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_add_customer, menu);
+        getMenuInflater().inflate(R.menu.menu_add, menu);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -165,11 +222,11 @@ public class CustomerListActivity extends AppCompatActivity {
                 String fullName = customerName.getText().toString().trim();
 
                 if (mobileNumber.isEmpty() || fullName.isEmpty()) {
-                    Toast.makeText(context, "Vui lòng nhập đầy đủ thông tin khách hàng", Toast.LENGTH_SHORT).show();
+                    CustomToast.showToastFailed(context,"Vui lòng nhập đầy đủ thông tin khách hàng");
                 } else {
                     addNewCustomer(mobileNumber, fullName);
                     getAllCustomer();
-                    Toast.makeText(context, "Thêm khách hàng thành công", Toast.LENGTH_SHORT).show();
+                    CustomToast.showToastSuccessful(context,"Thêm khách hàng thành công");
                 }
             }
         });
@@ -183,8 +240,8 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void addNewCustomer(String mobileNumber, String fullName) {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers");
-        Customer newCustomer = new Customer(mobileNumber, fullName, 0, 0);
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/"+user.getMobileNumber());
+        Customer newCustomer = new Customer(mobileNumber, fullName, GetCurrentDate.getCurrentDate(), 0, 0);
         databaseReference.child(newCustomer.getCustomerMobileNum()).setValue(newCustomer);
     }
 

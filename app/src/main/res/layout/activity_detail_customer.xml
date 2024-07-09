@@ -12,6 +12,11 @@
         android:layout_height="wrap_content"
         android:id="@+id/toolbar_DetailCustomer"
         app:title="Chi tiết khách hàng"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#dddddd"
+        android:layout_marginBottom="5dp"/>
     <LinearLayout
         android:background="@drawable/bg_item2"
         android:layout_width="match_parent"
@@ -84,19 +89,42 @@
                 android:text="Tổng tiền: "
                 android:textColor="#000"
                 android:textSize="17dp"/>
+
             <TextView
                 android:id="@+id/totalCash"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#000"
-                android:textSize="17dp"/>
+                android:textSize="17dp" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnCall"
+            style="@style/prop_Button"
+            android:layout_width="150dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:background="@drawable/bg_button_login_clicked"
+            android:text="Gọi"
+            android:textAllCaps="false"
+            android:textColor="@color/white" />
     </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textSize="17dp"
+        android:text="Hóa đơn đã mua"
+        android:textAllCaps="true"
+        android:padding="10dp"
+        android:textColor="#000"
+        android:gravity="center"/>
     <FrameLayout
         android:id="@+id/vInvoiceList"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <androidx.recyclerview.widget.RecyclerView
+            android:background="#dddddd"
             android:padding="16dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

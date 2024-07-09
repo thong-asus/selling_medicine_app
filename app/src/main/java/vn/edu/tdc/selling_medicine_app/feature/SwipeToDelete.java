@@ -1,10 +1,11 @@
-package vn.edu.tdc.selling_medicine_app.model;
+package vn.edu.tdc.selling_medicine_app.feature;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Vibrator;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -23,6 +24,8 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
     private Drawable icon;
     private final ColorDrawable background;
     private Context context;
+    RecyclerView recyclerView;
+
 
     public SwipeToDelete(ItemCustomerAdapter itemCustomerAdapter, Context context) {
         super(0, ItemTouchHelper.LEFT);
@@ -40,11 +43,17 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
     }
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-        return false;
+       return false;
     }
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+        //cảm biến rung
+        Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null && vibrator.hasVibrator()) {
+            vibrator.vibrate(50);
+        }
+        ///////////////////////////////////////////////
         int position = viewHolder.getAdapterPosition();
 
         if (mItemProductAdapter != null) {
@@ -55,7 +64,6 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
             mItemCustomerAdapter.deleteACustomer(position);
             return;
         }
-
     }
 
     @Override

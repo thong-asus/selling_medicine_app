@@ -1,4 +1,4 @@
-package vn.edu.tdc.selling_medicine_app.model;
+package vn.edu.tdc.selling_medicine_app.feature;
 
 import android.content.Context;
 import android.content.DialogInterface;
