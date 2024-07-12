@@ -55,7 +55,7 @@ import vn.edu.tdc.selling_medicine_app.model.Product;
 import vn.edu.tdc.selling_medicine_app.feature.ReloadSound;
 import vn.edu.tdc.selling_medicine_app.feature.SwipeToDelete;
 import vn.edu.tdc.selling_medicine_app.model.User;
-import vn.edu.tdc.selling_medicine_app.recycleview.ItemProductAdapter;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemProduct;
 
 public class ProductListActivity extends AppCompatActivity {
     private AlertDialog addProductDialog;
@@ -69,7 +69,7 @@ public class ProductListActivity extends AppCompatActivity {
     private Context context;
     private List<Product> productList = new ArrayList<>();
     private List<Product> originalProductList = new ArrayList<>();
-    private ItemProductAdapter itemProductAdapter;
+    private Adapter_ItemProduct itemProductAdapter;
     private ReloadSound reloadSound;
 
     private  User user = new User();
@@ -99,7 +99,7 @@ public class ProductListActivity extends AppCompatActivity {
     private void setEvent() {
         //đổ dữ liệu vào recycleview
         recycleview_productList.setLayoutManager(new LinearLayoutManager(this));
-        itemProductAdapter = new ItemProductAdapter(productList, this);
+        itemProductAdapter = new Adapter_ItemProduct(productList, this);
         recycleview_productList.setAdapter(itemProductAdapter);
         itemProductAdapter.notifyDataSetChanged();
 

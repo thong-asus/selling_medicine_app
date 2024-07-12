@@ -23,13 +23,13 @@ import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.model.Product;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
-public class ItemProductAdapter extends RecyclerView.Adapter<ItemProductViewHolder> {
+public class Adapter_ItemProduct extends RecyclerView.Adapter<ItemProductViewHolder> {
     private List<Product> productList;
     private Context context;
     private RecyclerView recyclerView;
     private  User user = new User();
 
-    public ItemProductAdapter(List<Product> productList, Context context) {
+    public Adapter_ItemProduct(List<Product> productList, Context context) {
         this.productList = productList;
         this.context = context;
         ////////////////////nhận dữ liệu///////////////////////

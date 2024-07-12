@@ -44,14 +44,14 @@ import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
 import vn.edu.tdc.selling_medicine_app.feature.ReloadSound;
 import vn.edu.tdc.selling_medicine_app.model.User;
-import vn.edu.tdc.selling_medicine_app.recycleview.ItemCustomerAdapter;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemCustomer;
 
 public class CustomerListActivity extends AppCompatActivity {
     private AlertDialog addCustomerDialog;
     private Toolbar toolbar_customerList;
     TextInputEditText search_customerList;
     private RecyclerView recyclerView_customerList;
-    private ItemCustomerAdapter itemCustomerAdapter;
+    private Adapter_ItemCustomer itemCustomerAdapter;
     private List<Customer> customerList = new ArrayList<>();
     private List<Customer> originalCustomerList = new ArrayList<>();
     private Context context;
@@ -139,7 +139,7 @@ public class CustomerListActivity extends AppCompatActivity {
 
         recyclerView_customerList = findViewById(R.id.recycleview_customerList);
         recyclerView_customerList.setLayoutManager(new LinearLayoutManager(this));
-        itemCustomerAdapter = new ItemCustomerAdapter(customerList, this);
+        itemCustomerAdapter = new Adapter_ItemCustomer(customerList, this);
         recyclerView_customerList.setAdapter(itemCustomerAdapter);
         itemCustomerAdapter.notifyDataSetChanged();
     }

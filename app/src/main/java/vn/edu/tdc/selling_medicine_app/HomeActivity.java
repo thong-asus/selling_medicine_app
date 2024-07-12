@@ -62,7 +62,8 @@ public class HomeActivity extends AppCompatActivity {
         btn_payment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "Chuyển sang màn hình thanh toán", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(context, PrePaymentActivity.class);
+                startActivity(intent);
             }
         });
         btn_product.setOnClickListener(new View.OnClickListener() {

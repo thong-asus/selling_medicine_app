@@ -1,0 +1,33 @@
+<!-- custom_dialog_add_medicine_to_invoice.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/drugNameLayout"
+        style="@style/prop_textInputLayout"
+        android:hint="Nhập tên thuốc">
+        <AutoCompleteTextView
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:id="@+id/drugNameInvoice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/prop_textInputEditText"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/qtyLayout"
+        style="@style/prop_textInputLayout"
+        android:hint="Số lượng">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/qtyDrugInvoice"
+            android:imeOptions="actionDone"
+            style="@style/prop_textInputEditText"
+            android:inputType="number"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

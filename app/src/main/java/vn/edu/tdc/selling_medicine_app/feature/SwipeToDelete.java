@@ -14,12 +14,14 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import vn.edu.tdc.selling_medicine_app.R;
-import vn.edu.tdc.selling_medicine_app.recycleview.ItemCustomerAdapter;
-import vn.edu.tdc.selling_medicine_app.recycleview.ItemProductAdapter;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemCustomer;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemMedicineAddedPrePayment;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemProduct;
 
 public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
-    private ItemCustomerAdapter mItemCustomerAdapter;
-    private ItemProductAdapter mItemProductAdapter;
+    private Adapter_ItemCustomer mItemCustomerAdapter;
+    private Adapter_ItemMedicineAddedPrePayment mAdapterItemMedicineAddedPrePayment;
+    private Adapter_ItemProduct mItemProductAdapter;
 
     private Drawable icon;
     private final ColorDrawable background;
@@ -27,20 +29,27 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
     RecyclerView recyclerView;
 
 
-    public SwipeToDelete(ItemCustomerAdapter itemCustomerAdapter, Context context) {
+    public SwipeToDelete(Adapter_ItemCustomer itemCustomerAdapter, Context context) {
         super(0, ItemTouchHelper.LEFT);
         this.mItemCustomerAdapter = itemCustomerAdapter;
         this.context = context;
         this.icon = ContextCompat.getDrawable(context, R.drawable.ic_delete);
         this.background = new ColorDrawable(Color.WHITE);
     }
-    public SwipeToDelete(ItemProductAdapter itemProductAdapter, Context context) {
+    public SwipeToDelete(Adapter_ItemProduct itemProductAdapter, Context context) {
         super(0, ItemTouchHelper.LEFT);
         this.mItemProductAdapter = itemProductAdapter;
         this.context = context;
         this.icon = ContextCompat.getDrawable(context, R.drawable.ic_delete);
         this.background = new ColorDrawable(Color.WHITE);
     }
+//    public SwipeToDelete(Adapter_ItemMedicineAddedPrePayment adapterItemMedicineAddedPrePayment, Context context) {
+//        super(0, ItemTouchHelper.LEFT);
+//        this.mAdapterItemMedicineAddedPrePayment = adapterItemMedicineAddedPrePayment;
+//        this.context = context;
+//        this.icon = ContextCompat.getDrawable(context, R.drawable.ic_clear);
+//        this.background = new ColorDrawable(Color.WHITE);
+//    }
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
        return false;
@@ -64,6 +73,10 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
             mItemCustomerAdapter.deleteACustomer(position);
             return;
         }
+//        if (mItemCustomerAdapter != null) {
+//            mAdapterItemMedicineAddedPrePayment.showDeleteConfirmationDialog(position);
+//            return;
+//        }
     }
 
     @Override

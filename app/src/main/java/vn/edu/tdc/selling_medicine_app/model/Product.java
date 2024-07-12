@@ -17,6 +17,19 @@ public class Product implements Serializable {
     private int price;
     private String dateCreated;
 
+    public Product(String drugName, int qtyInventory) {
+        this.drugName = drugName;
+        this.qtyInventory = qtyInventory;
+    }
+    public Product(String idDrug, String drugName, int qtyInventory) {
+        this.idDrug = idDrug;
+        this.drugName = drugName;
+        this.qtyInventory = qtyInventory;
+    }
+    public Product(String idDrug, String drugName) {
+        this.idDrug = idDrug;
+        this.drugName = drugName;
+    }
     public Product(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtyInventory, int price, String dateCreated) {
         this.idDrug = idDrug;
         this.imageDrug = imageDrug;

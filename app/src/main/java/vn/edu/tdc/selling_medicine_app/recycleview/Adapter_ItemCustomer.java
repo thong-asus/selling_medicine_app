@@ -20,10 +20,11 @@ import java.util.List;
 import vn.edu.tdc.selling_medicine_app.DetailCustomerActivity;
 import vn.edu.tdc.selling_medicine_app.R;
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.FormatNumber;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
-public class ItemCustomerAdapter extends RecyclerView.Adapter<ItemCustomerViewHolder> {
+public class Adapter_ItemCustomer extends RecyclerView.Adapter<ItemCustomerViewHolder> {
     private List<Customer> customerList;
     private Context context;
     private RecyclerView recyclerView;
@@ -32,7 +33,7 @@ public class ItemCustomerAdapter extends RecyclerView.Adapter<ItemCustomerViewHo
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference databaseReference;
 
-    public ItemCustomerAdapter(List<Customer> customerList, Context context) {
+    public Adapter_ItemCustomer(List<Customer> customerList, Context context) {
         this.customerList = customerList;
         this.context = context;
 
@@ -59,7 +60,7 @@ public class ItemCustomerAdapter extends RecyclerView.Adapter<ItemCustomerViewHo
         holder.fullname.setText(customer.getCustomerName());
         holder.mobileNumber.setText(customer.getCustomerMobileNum());
         holder.qtyBought.setText(String.valueOf(customer.getQtyBought()));
-        holder.totalCash.setText(String.valueOf(customer.getTotalCash()) + " VND");
+        holder.totalCash.setText(FormatNumber.formatNumber(customer.getTotalCash()) + " VND");
         holder.bind(customer);
 
 //        if (customerList.isEmpty()) {

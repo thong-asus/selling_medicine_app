@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".PrePaymentActivity"
+    android:background="#fff"
+    android:id="@+id/viewPrePayment">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_prePayment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="Thanh toán" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#dddddd" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/ivMedicinePrePayment"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"
+                android:background="@color/loading" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/prop_textInputLayout_search_home">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtCustomerMobileNum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/prop_search_home"
+                    android:hint="Nhập số điện thoại khách hàng"
+                    android:imeOptions="actionDone"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/prop_textInputLayout_search_home">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtCustomerName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/prop_search_home"
+                    android:hint="Nhập tên khách hàng"
+                    android:imeOptions="actionDone"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Ngày mua: "
+                    android:textColor="#000"
+                    android:textSize="17dp" />
+
+                <TextView
+                    android:id="@+id/dateCreated"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="#000"
+                    android:textSize="17dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:layout_height="wrap_content"
+                android:text="Ghi chú"
+                android:layout_marginTop="5dp"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/prop_textInputLayout_search_home">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/prop_search_home"
+                    android:imeOptions="actionDone"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btnAddMedicine"
+                style="@style/prop_Button"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_login_clicked"
+                android:text="Thêm thuốc vào đơn"
+                android:layout_marginBottom="10dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rec_medicine_added_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_recycle" />
+
+            <Button
+                android:textStyle="normal"
+                android:id="@+id/nextPayment"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|bottom"
+                android:background="@drawable/bg_button_next_clicked"
+                android:text="Tiếp tục"
+                style="@style/prop_Button" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>
