@@ -24,22 +24,25 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="10dp">
+
             <ImageView
+                android:layout_marginTop="5dp"
                 android:id="@+id/ivMedicinePayment"
-                android:layout_width="300dp"
+                android:layout_width="match_parent"
                 android:layout_height="150dp"
                 android:layout_gravity="center"
                 android:layout_marginBottom="10dp"
-                android:background="@color/loading"/>
+                android:background="@color/loading" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="210dp"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
-                    android:text="Số điện thoại khách hàng: "
+                    android:text="Số điện thoại: "
                     android:textColor="#000"
                     android:textSize="17dp"
                     android:textStyle="bold" />
@@ -57,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView
-                    android:layout_width="210dp"
+                    android:layout_width="150dp"
                     android:textStyle="bold"
                     android:layout_height="wrap_content"
                     android:text="Tên khách hàng: "
@@ -75,7 +78,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView
-                    android:layout_width="210dp"
+                    android:layout_width="150dp"
                     android:textStyle="bold"
                     android:layout_height="wrap_content"
                     android:text="Ngày mua: "
@@ -94,7 +97,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView
-                    android:layout_width="210dp"
+                    android:layout_width="150dp"
                     android:textStyle="bold"
                     android:layout_height="wrap_content"
                     android:text="Ghi chú: "
@@ -115,7 +118,7 @@
                 android:layout_marginTop="5dp"/>
             <androidx.recyclerview.widget.RecyclerView
                 android:layout_width="match_parent"
-                android:layout_height="150dp"
+                android:layout_height="wrap_content"
                 android:background="@drawable/bg_recycle"
                 android:id="@+id/rec_itemPayment"/>
             <LinearLayout
@@ -124,7 +127,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="210dp"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
                     android:text="Tổng số lượng: "
                     android:textColor="#000"
@@ -135,57 +138,91 @@
                     android:id="@+id/totalQtyDrug"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textStyle="bold"
                     android:textColor="#000"
                     android:textSize="17dp" />
 
             </LinearLayout>
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_gravity="center"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/prop_textInputLayout_search_home">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtTotalCash"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/prop_search_home"
-                    android:hint="Tổng tiền"
-                    android:imeOptions="actionDone"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_gravity="center"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="@style/prop_textInputLayout_search_home">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtCustomerPaid"
-                    style="@style/prop_search_home"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Tiền khách trả"
-                    android:imeOptions="actionDone"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
             <LinearLayout
+                android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
                 <TextView
-                    android:layout_width="210dp"
-                    android:textStyle="bold"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:text="Tổng tiền: "
+                    android:textColor="#000"
+                    android:textSize="17dp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/totalCash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000"
+                    android:textSize="17dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000"
+                    android:text=" VND"
+                    android:textSize="17dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_marginTop="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:text="Tiền khách trả: "
+                    android:textColor="#000"
+                    android:textSize="17dp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/customerPaid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000"
+                    android:textSize="17dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000"
+                    android:text=" VND"
+                    android:textSize="17dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_marginTop="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
                     android:text="Tiền thừa: "
                     android:textColor="#000"
-                    android:textSize="17dp"/>
+                    android:textSize="17dp"
+                    android:textStyle="bold" />
                 <TextView
                     android:id="@+id/changeOfCustomer"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#000"
-                    android:textSize="17dp"/>
+                    android:textSize="17dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#000"
+                    android:text=" VND"
+                    android:textSize="17dp" />
             </LinearLayout>
             <Button
                 android:id="@+id/btnSaveBill"

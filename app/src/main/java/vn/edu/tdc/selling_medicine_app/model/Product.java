@@ -1,7 +1,6 @@
 package vn.edu.tdc.selling_medicine_app.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class Product implements Serializable {
     private String idDrug;
@@ -13,24 +12,24 @@ public class Product implements Serializable {
     private String dosage;
     private String sideEffects;
     private String expiryDate;
-    private int qtyInventory;
+    private int qtySelling;
     private int price;
     private String dateCreated;
 
-    public Product(String drugName, int qtyInventory) {
+    public Product(String drugName, int qtySelling) {
         this.drugName = drugName;
-        this.qtyInventory = qtyInventory;
+        this.qtySelling = qtySelling;
     }
-    public Product(String idDrug, String drugName, int qtyInventory) {
+    public Product(String idDrug, String drugName, int qtySelling) {
         this.idDrug = idDrug;
         this.drugName = drugName;
-        this.qtyInventory = qtyInventory;
+        this.qtySelling = qtySelling;
     }
     public Product(String idDrug, String drugName) {
         this.idDrug = idDrug;
         this.drugName = drugName;
     }
-    public Product(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtyInventory, int price, String dateCreated) {
+    public Product(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtySelling, int price, String dateCreated) {
         this.idDrug = idDrug;
         this.imageDrug = imageDrug;
         this.drugName = drugName;
@@ -40,7 +39,7 @@ public class Product implements Serializable {
         this.dosage = dosage;
         this.sideEffects = sideEffects;
         this.expiryDate = expiryDate;
-        this.qtyInventory = qtyInventory;
+        this.qtySelling = qtySelling;
         this.price = price;
         this.dateCreated = dateCreated;
     }
@@ -117,12 +116,12 @@ public class Product implements Serializable {
         this.expiryDate = expiryDate;
     }
 
-    public int getQtyInventory() {
-        return qtyInventory;
+    public int getQtySelling() {
+        return qtySelling;
     }
 
-    public void setQtyInventory(int qtyInventory) {
-        this.qtyInventory = qtyInventory;
+    public void setQtySelling(int qtySelling) {
+        this.qtySelling = qtySelling;
     }
 
     public int getPrice() {

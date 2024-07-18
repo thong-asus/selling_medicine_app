@@ -37,6 +37,12 @@ public class Adapter_ItemPayment extends RecyclerView.Adapter<ItemPaymentViewHol
         holder.idDrug.setText(item.getIdDrug());
         holder.drugNameAdded.setText(item.getDrugName());
         holder.qtyDrugAdded.setText(String.valueOf(item.getQtyDrug()));
+
+        if (itemList.size() > 1 && position < itemList.size() - 1) {
+            holder.viewLine.setVisibility(View.VISIBLE);
+        } else {
+            holder.viewLine.setVisibility(View.GONE);
+        }
     }
 
     @Override

@@ -131,7 +131,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_recycle" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_marginTop="5dp"
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/prop_textInputLayout_search_home">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtTotalCash"
+                    style="@style/prop_search_home"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tổng tiền"
+                    android:imeOptions="actionDone"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/prop_textInputLayout_search_home">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtCustomerPaid"
+                    style="@style/prop_search_home"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tiền khách trả"
+                    android:imeOptions="actionDone"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
             <Button
                 android:textStyle="normal"
                 android:id="@+id/nextPayment"

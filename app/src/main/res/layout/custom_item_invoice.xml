@@ -5,8 +5,12 @@
     android:layout_marginTop="5dp"
     android:layout_marginHorizontal="5dp"
     android:padding="5dp"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:id="@+id/linear_item_invoice">
+
+
     <ImageView
+        android:layout_gravity="center"
         android:layout_width="140dp"
         android:layout_height="70dp"
         android:background="@color/loading"
@@ -61,6 +65,22 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/total_cash" />
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ngày mua: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dateCreated" />
+        </LinearLayout>
+
     </LinearLayout>
 
 

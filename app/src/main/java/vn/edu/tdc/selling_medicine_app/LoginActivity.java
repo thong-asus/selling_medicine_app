@@ -26,19 +26,19 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.HashUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ShowMessage;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class LoginActivity extends AppCompatActivity {
 
-    View vLogin;
-    TextInputEditText mobileNumber, password;
-    Button btnLogin, btnRegister;
-    TextView tvForgotPassword;
-    Context context;
-    FirebaseFirestore firestore;
-    FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-    DatabaseReference databaseReference;
+    private View vLogin;
+    private TextInputEditText mobileNumber, password;
+    private Button btnLogin, btnRegister;
+    private TextView tvForgotPassword;
+    private Context context;
+    private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    private DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +46,6 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         //////////////////////////////////////////////
         FirebaseApp.initializeApp(this);
-        //Khởi tạo db
-        firestore = FirebaseFirestore.getInstance();
         //////////////////////////////////////////////
         context = this;
         setControl();
@@ -55,6 +53,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setEvent() {
+        tvForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, ForgotPasswordActivity.class);
+                startActivity(intent);
+            }
+        });
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -65,15 +70,17 @@ public class LoginActivity extends AppCompatActivity {
                     CustomToast.showToastFailed(context, "Vui lòng điền thông tin đăng nhập!");
                     return;
                 }
+
                 databaseReference = firebaseDatabase.getReference("User/" + inputMobileNumber);
                 databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists()){
-                            ///////////MỘT ĐỐI TƯỢNG USER///////////////
+                        if (snapshot.exists()) {
                             User user = snapshot.getValue(User.class);
-                            if(user.getPassword().equals(inputPassword)){
-                                //Đăng nhập thành công
+                            String hashedInputPassword = HashUtil.hashPassword(inputPassword);
+
+                            if (user != null && user.getPassword().equals(hashedInputPassword)) {
+                                // Đăng nhập thành công
                                 CustomToast.showToastSuccessful(context, "Đăng nhập thành công ^^");
 
                                 SharedPreferences sharedPreferences = getSharedPreferences("informationUser", Context.MODE_PRIVATE);
@@ -89,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                             } else {
                                 CustomToast.showToastFailed(context, "Sai mật khẩu!");
                             }
-                        } else  {
+                        } else {
                             CustomToast.showToastFailed(context, "Tài khoản không tồn tại!");
                         }
                     }
@@ -106,6 +113,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(context, RegisterActivity.class);
                 startActivity(intent);
+                finish();
             }
         });
         mobileNumber.setOnEditorActionListener(new TextView.OnEditorActionListener() {

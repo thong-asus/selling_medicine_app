@@ -27,7 +27,7 @@
 
         <ImageView
             android:id="@+id/ivMedicine"
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="150dp"
             android:layout_gravity="center"
             android:layout_marginBottom="10dp"
@@ -224,13 +224,13 @@
                 <TextView
                     android:layout_width="140dp"
                     android:layout_height="wrap_content"
-                    android:text="Số lượng tồn kho: "
+                    android:text="Đang bán: "
                     android:textColor="#000"
                     android:textSize="17dp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/qtyInventory"
+                    android:id="@+id/qtySelling"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#000"

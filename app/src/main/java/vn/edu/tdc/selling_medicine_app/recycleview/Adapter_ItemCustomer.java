@@ -63,11 +63,6 @@ public class Adapter_ItemCustomer extends RecyclerView.Adapter<ItemCustomerViewH
         holder.totalCash.setText(FormatNumber.formatNumber(customer.getTotalCash()) + " VND");
         holder.bind(customer);
 
-//        if (customerList.isEmpty()) {
-//            holder.tvNoAvailableCustomer.setVisibility(View.VISIBLE);
-//        } else {
-//            holder.tvNoAvailableCustomer.setVisibility(View.GONE);
-//        }
         holder.itemView.setBackgroundResource(R.drawable.bg_item1);
 
         //Chuyển sang màn hình Chi tiết khách hàng

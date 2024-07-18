@@ -1,3 +1,54 @@
 <resources>
     <string name="app_name">MedManager</string>
+    <string-array name="sort_by_name_customer">
+        <item>Không chọn</item>
+        <item>Từ A-Z</item>
+        <item>Từ Z-A</item>
+    </string-array>
+    <string-array name="sort_customer_by_date">
+        <item>Không chọn</item>
+        <item>Mới nhất</item>
+        <item>Cũ nhất</item>
+        <item>Hôm nay</item>
+        <item>Hôm qua</item>
+        <item>Tuần này</item>
+        <item>Tháng này</item>
+    </string-array>
+    <string-array name="sort_customer_by_qty_bought">
+        <item>Không chọn</item>
+        <item>Cao nhất</item>
+        <item>Thấp nhất</item>
+        <item>&lt;5</item>
+        <item>5-10</item>
+        <item>&gt;10</item>
+
+    </string-array>
+    <string-array name="sort_customer_by_total_cash">
+        <item>Không chọn</item>
+        <item>Cao nhất</item>
+        <item>Thấp nhất</item>
+        <item>&lt;5000</item>
+        <item>5000-10000</item>
+        <item>10000-20000</item>
+        <item>20000-50000</item>
+        <item>&gt;50000</item>
+
+    </string-array>
+    <string-array name="sort_by_product_expiry_date">
+        <item>Không chọn</item>
+<!--        <item>&lt;1 Tuần</item>-->
+        <item>&lt;1 Tháng</item>
+        <item>&lt;3 Tháng</item>
+        <item>&lt;6 Tháng</item>
+        <item>&lt;1 Năm</item>
+        <item>&gt;1 Năm</item>
+    </string-array>
+    <string-array name="sort_by_product_selling">
+    <item>Không chọn</item>
+    <item>Cao nhất</item>
+    <item>Thấp nhất</item>
+    <item>&lt;5</item>
+    <item>5-10</item>
+    <item>&gt;10</item>
+    </string-array>
 </resources>

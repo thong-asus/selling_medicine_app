@@ -114,7 +114,7 @@
                 style="@style/prop_textInputLayout">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/qtyInventory"
+                    android:id="@+id/qtySelling"
                     style="@style/prop_textInputEditText"
                     android:hint="Số lượng"
                     android:imeOptions="actionDone"

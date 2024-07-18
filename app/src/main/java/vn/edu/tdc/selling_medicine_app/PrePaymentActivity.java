@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,6 +13,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -26,7 +26,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DataSnapshot;
@@ -35,7 +34,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +42,6 @@ import java.util.Map;
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
-import vn.edu.tdc.selling_medicine_app.feature.SwipeToDelete;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.model.MyBill;
 import vn.edu.tdc.selling_medicine_app.model.Product;
@@ -53,12 +50,12 @@ import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemMedicineAddedPreP
 
 public class PrePaymentActivity extends AppCompatActivity {
 
-    ImageView ivMedicinePrePayment;
-    TextInputEditText edtCustomerMobileNum, edtCustomerName, edtNote;
-    TextView dateCreated;
-    Button nextPayment,btnAddMedicine;
-    Toolbar toolbar_prePayment;
-    View viewPrePayment;
+    private ImageView ivMedicinePrePayment;
+    private TextInputEditText edtCustomerMobileNum, edtCustomerName, edtNote, edtTotalCash, edtCustomerPaid;
+    private TextView dateCreated;
+    private Button nextPayment, btnAddMedicine;
+    private Toolbar toolbar_prePayment;
+    private View viewPrePayment;
     ////////////////////////////////////////////////////////
     private Context context;
     private RecyclerView rec_medicine_added_list;
@@ -156,7 +153,7 @@ public class PrePaymentActivity extends AppCompatActivity {
                 }
             }
         });
-        dateCreated.setText(GetCurrentDate.getCurrentDate());
+        dateCreated.setText(GetCurrentDate.getCurrentDateTime());
         btnAddMedicine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -166,34 +163,43 @@ public class PrePaymentActivity extends AppCompatActivity {
         nextPayment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(edtCustomerMobileNum.getText().toString().isEmpty() || edtCustomerName.getText().toString().isEmpty() || adapterItemMedicineAddedPrePayment.getItemCount() == 0) {
-                    CustomToast.showToastFailed(context,"Vui lòng nhập đầy đủ thông tin đơn thuốc");
+                if (edtCustomerMobileNum.getText().toString().isEmpty() || edtCustomerName.getText().toString().isEmpty() || edtTotalCash.getText().toString().isEmpty() || edtCustomerPaid.getText().toString().isEmpty() || adapterItemMedicineAddedPrePayment.getItemCount() == 0) {
+                    CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin đơn thuốc");
                 } else {
-                    addNewCustomer(edtCustomerMobileNum.getText().toString(),edtCustomerName.getText().toString());
+                    addNewCustomer(edtCustomerMobileNum.getText().toString(), edtCustomerName.getText().toString());
                     sendToPaymentActivity();
                 }
             }
         });
     }
 
-
-        private void sendToPaymentActivity() {
+    private void sendToPaymentActivity() {
         String customerMobileNum = edtCustomerMobileNum.getText().toString().trim();
         String customerName = edtCustomerName.getText().toString().trim();
         String dateCreatedText = dateCreated.getText().toString().trim();
         String note = edtNote.getText().toString().trim();
+        String totalCashString = edtTotalCash.getText().toString().trim();
+        String customerPaidString = edtCustomerPaid.getText().toString().trim();
+
+        int totalCash = Integer.parseInt(totalCashString);
+        int customerPaid = Integer.parseInt(customerPaidString);
+        int changeOfCustomer = customerPaid - totalCash;
 
         MyBill myBill = new MyBill();
         myBill.setUserMobileNum(user.getMobileNumber());
         myBill.setCustomerMobileNum(customerMobileNum);
+        myBill.setCustomerName(customerName);
         myBill.setDateCreated(dateCreatedText);
         myBill.setNote(note);
+        myBill.setTotalCash(totalCash);
+        myBill.setCustomerPaid(customerPaid);
+        myBill.setChangeOfCustomer(changeOfCustomer);
 
         for (Product product : productArrayList) {
             MyBill.Item item = new MyBill.Item();
             item.setIdDrug(product.getIdDrug()); ///////////set id để add firebase
             item.setDrugName(product.getDrugName());
-            item.setQtyDrug(product.getQtyInventory());
+            item.setQtyDrug(product.getQtySelling());
             // Nếu có giá thuốc thì cập nhật vào item.setPrice(product.getPrice());
             myBill.addItem(item);
         }
@@ -203,9 +209,12 @@ public class PrePaymentActivity extends AppCompatActivity {
         intent.putExtra("customerMobileNum", customerMobileNum);
         intent.putExtra("myBill", myBill);
         intent.putExtra("customerName", customerName);
+        intent.putExtra("changeOfCustomer", changeOfCustomer);
         intent.putStringArrayListExtra("selectedDrugIds", new ArrayList<>(selectedDrugIds));
         startActivity(intent);
     }
+
+
     private void addNewCustomer(String mobileNumber, String fullName) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/" + user.getMobileNumber());
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -213,10 +222,10 @@ public class PrePaymentActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (!snapshot.child(mobileNumber).exists()) {
                     // Khách hàng không tồn tại trong database, thêm mới
-                    Customer newCustomer = new Customer(mobileNumber, fullName, GetCurrentDate.getCurrentDate(), 0, 0);
+                    Customer newCustomer = new Customer(mobileNumber, fullName, GetCurrentDate.getCurrentDateTime(), 0, 0);
                     databaseReference.child(mobileNumber).setValue(newCustomer)
                             .addOnSuccessListener(aVoid -> {
-                                CustomToast.showToastSuccessful(context,"Đã thêm khách hàng mới");
+                                CustomToast.showToastSuccessful(context, "Đã thêm khách hàng mới");
                             })
                             .addOnFailureListener(e -> {
 
@@ -240,11 +249,11 @@ public class PrePaymentActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<String> drugNames = new ArrayList<>();
                 for (DataSnapshot drugSnapshot : snapshot.getChildren()) {
-                    String idDrug = drugSnapshot.getKey(); // Lấy ID thuốc
+                    String idDrug = drugSnapshot.getKey();
                     String drugName = drugSnapshot.child("drugName").getValue(String.class);
                     if (drugName != null) {
                         drugNames.add(drugName);
-                        drugIdMap.put(drugName, idDrug); // Lưu ánh xạ tên thuốc với idDrug
+                        drugIdMap.put(drugName, idDrug);
                     }
                 }
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line, drugNames);
@@ -253,7 +262,8 @@ public class PrePaymentActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                CustomToast.showToastFailed(context, "Đã xảy ra lỗi khi tải danh sách thuốc");
+                //CustomToast.showToastFailed(context, "Đã xảy ra lỗi khi tải danh sách thuốc");
+                Log.d("Lỗi tải DS Thuốc: ", "Xảy ra lỗi khi tải ds thuốc");
             }
         });
     }
@@ -286,7 +296,7 @@ public class PrePaymentActivity extends AppCompatActivity {
                             adapterItemMedicineAddedPrePayment.notifyDataSetChanged();
 
 
-                            CustomToast.showToastSuccessful(context,"Thêm thuốc vào đơn thành công");
+                            CustomToast.showToastSuccessful(context, "Thêm thuốc vào đơn thành công");
                         } else {
                             CustomToast.showToastFailed(context, "Không tìm thấy id thuốc");
                         }
@@ -379,6 +389,8 @@ public class PrePaymentActivity extends AppCompatActivity {
         rec_medicine_added_list = findViewById(R.id.rec_medicine_added_list);
         toolbar_prePayment = findViewById(R.id.toolbar_prePayment);
         viewPrePayment = findViewById(R.id.viewPrePayment);
+        edtCustomerPaid = findViewById(R.id.edtCustomerPaid);
+        edtTotalCash = findViewById(R.id.edtTotalCash);
 
         viewPrePayment.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -388,6 +400,7 @@ public class PrePaymentActivity extends AppCompatActivity {
             }
         });
     }
+
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {

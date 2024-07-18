@@ -7,6 +7,7 @@ import java.util.List;
 public class MyBill implements Serializable {
     private String userMobileNum;
     private String customerMobileNum;
+    private String customerName;
     private String invoiceID;
     private String dateCreated;
     private String note;
@@ -17,13 +18,17 @@ public class MyBill implements Serializable {
     private int changeOfCustomer;
     private int totalQty; // Thêm thuộc tính totalQty
 
+
     public MyBill() {
         items = new ArrayList<>();
     }
 
-    public MyBill(String userMobileNum, String customerMobileNum, String invoiceID, String dateCreated, String note, String imageInvoice, List<Item> items, int totalCash, int customerPaid, int changeOfCustomer, int totalQty) {
+
+
+    public MyBill(String userMobileNum, String customerMobileNum, String customerName, String invoiceID, String dateCreated, String note, String imageInvoice, List<Item> items, int totalCash, int customerPaid, int changeOfCustomer, int totalQty) {
         this.userMobileNum = userMobileNum;
         this.customerMobileNum = customerMobileNum;
+        this.customerName = customerName;
         this.invoiceID = invoiceID;
         this.dateCreated = dateCreated;
         this.note = note;
@@ -35,7 +40,15 @@ public class MyBill implements Serializable {
         this.totalQty = totalQty; // Khởi tạo totalQty
     }
 
+
     // Getters and setters cho tất cả các trường
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
     public String getUserMobileNum() {
         return userMobileNum;
     }

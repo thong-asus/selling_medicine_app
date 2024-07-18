@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_home"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomeActivity"
     android:background="#fff"
-    android:id="@+id/layout_home">
+    tools:context=".HomeActivity">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -21,12 +21,12 @@
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar_home"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#dddddd"/>
+                android:background="#dddddd" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -42,47 +42,22 @@
                     android:textSize="25dp"
                     android:textStyle="bold" />
 
-<!--                <LinearLayout-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:orientation="horizontal">-->
-
-<!--                    <com.google.android.material.textfield.TextInputLayout-->
-<!--                        style="@style/prop_textInputLayout_search_home">-->
-
-<!--                        <com.google.android.material.textfield.TextInputEditText-->
-<!--                            android:id="@+id/search_home"-->
-<!--                            style="@style/prop_search_home"-->
-<!--                            android:drawableLeft="@drawable/ic_search"-->
-<!--                            android:hint="Tìm kiếm"-->
-<!--                            android:imeOptions="actionDone"-->
-<!--                            android:inputType="text" />-->
-<!--                    </com.google.android.material.textfield.TextInputLayout>-->
-
-<!--                    <ImageView-->
-<!--                        android:id="@+id/btn_filter_home"-->
-<!--                        android:layout_width="50dp"-->
-<!--                        android:layout_height="50dp"-->
-<!--                        android:layout_marginStart="10dp"-->
-<!--                        android:layout_marginTop="4dp"-->
-<!--                        android:src="@drawable/filter_corner"/>-->
-<!--                </LinearLayout>-->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
+                        style="@style/prop_textInputLayout_search_home"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        style="@style/prop_textInputLayout_search_home">
+                        android:layout_weight="1">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/search_home"
+                            style="@style/prop_search_home"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            style="@style/prop_search_home"
                             android:drawableLeft="@drawable/ic_search"
                             android:hint="Tìm kiếm"
                             android:imeOptions="actionDone"
@@ -95,96 +70,100 @@
                         android:layout_height="50dp"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="4dp"
-                        android:src="@drawable/filter_corner"/>
+                        android:src="@drawable/filter_corner" />
                 </LinearLayout>
+            </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="3dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Hóa đơn gần nhất"/>
+                    android:text="Hóa đơn gần nhất" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycleview_recentInvoice"
                     android:layout_width="match_parent"
-                    android:layout_height="130dp"
+                    android:layout_height="100dp"
+                    android:layout_marginBottom="50dp"
+                    android:background="@color/loading"
                     android:orientation="horizontal"
+                    android:scrollbarThumbHorizontal="@color/divider_color"
                     android:scrollbars="horizontal" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
                     android:text="Chức năng"
-                    android:textSize="20dp"
                     android:textColor="#000"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="10dp"/>
+                    android:textSize="20dp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/btn_history"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginRight="20dp"
-                        android:background="@drawable/linear_history"/>
+                        android:background="@drawable/linear_history" />
 
                     <Button
                         android:id="@+id/btn_customer"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginRight="20dp"
-                        android:background="@drawable/linear_customer"/>
+                        android:background="@drawable/linear_customer" />
 
                     <Button
                         android:id="@+id/btn_product"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_product"/>
+                        android:background="@drawable/linear_product" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="20dp"/>
+                    android:layout_height="20dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/btn_inventory"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginRight="20dp"
-                        android:background="@drawable/linear_inventory"/>
+                        android:background="@drawable/linear_inventory" />
 
                     <Button
                         android:id="@+id/btn_statistic"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:layout_marginRight="20dp"
-                        android:background="@drawable/linear_statistic"/>
+                        android:background="@drawable/linear_statistic" />
 
                     <Button
                         android:id="@+id/btn_payment"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/linear_payment"/>
+                        android:background="@drawable/linear_payment" />
                 </LinearLayout>
             </LinearLayout>
-            </LinearLayout>
+
+        </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 
@@ -197,6 +176,5 @@
         app:itemIconSize="40dp"
         app:itemIconTint="#FF00BCD4"
         app:itemTextColor="#000"
-        app:menu="@menu/bottom_navigation_menu"/>
-
+        app:menu="@menu/bottom_navigation_menu" />
 </RelativeLayout>

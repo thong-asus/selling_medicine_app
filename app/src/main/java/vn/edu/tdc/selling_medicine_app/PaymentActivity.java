@@ -9,37 +9,34 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.contentcapture.ContentCaptureCondition;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.checkerframework.checker.units.qual.C;
-
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.FormatNumber;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
-import vn.edu.tdc.selling_medicine_app.model.BillSingleton;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.model.MyBill;
 import vn.edu.tdc.selling_medicine_app.model.User;
@@ -47,14 +44,14 @@ import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemPayment;
 
 public class PaymentActivity extends AppCompatActivity {
 
-    Toolbar toolbar_Payment;
-    Button btnSaveBill;
-    View viewPayment;
+    private Toolbar toolbar_Payment;
+    private Button btnSaveBill;
+    private View viewPayment;
     private RecyclerView rec_itemPayment;
     private Adapter_ItemPayment adapterItemPayment;
     private List<MyBill.Item> itemList;
-    TextView customerMobileNum, customerName, dateCreated, noted, changeOfCustomer, totalQtyDrug;
-    TextInputEditText edtTotalCash, edtCustomerPaid;
+    private TextView customerMobileNum, customerName, dateCreated, noted , totalQtyDrug, totalCash, customerPaid, changeOfCustomer;
+    //TextInputEditText edtTotalCash, edtCustomerPaid;
     private Context context;
     private User user = new User();
     private Customer customer;
@@ -68,8 +65,7 @@ public class PaymentActivity extends AppCompatActivity {
         user = ReceiveUserInfo.getUserInfo(context);
         customer = new Customer();
         setControl();
-        getChangeOfCustomer();
-        // setEvent();
+
         ArrayList<String> selectedDrugIds = getIntent().getStringArrayListExtra("selectedDrugIds");
         if (selectedDrugIds != null) {
 
@@ -104,7 +100,11 @@ public class PaymentActivity extends AppCompatActivity {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
                     customerMobileNum.setText(myBill.getCustomerMobileNum());
                     dateCreated.setText(myBill.getDateCreated());
+                    customerName.setText(myBill.getCustomerName());
                     noted.setText(myBill.getNote());
+                    totalCash.setText(FormatNumber.formatNumber(myBill.getTotalCash()));
+                    customerPaid.setText(FormatNumber.formatNumber(myBill.getCustomerPaid()));
+                    changeOfCustomer.setText(FormatNumber.formatNumber(myBill.getChangeOfCustomer()));
                     customerInfo(myBill.getCustomerMobileNum());
 
                 } else {
@@ -119,15 +119,10 @@ public class PaymentActivity extends AppCompatActivity {
         btnSaveBill.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(edtTotalCash.getText().toString().isEmpty() || edtCustomerPaid.getText().toString().isEmpty()){
-                    CustomToast.showToastFailed(context,"Vui lòng nhập số tiền");
-                } else {
                     saveBill();
-                }
             }
         });
     }
-
 
     private void saveBill() {
         String userMobileNumber = user.getMobileNumber();
@@ -140,25 +135,41 @@ public class PaymentActivity extends AppCompatActivity {
         }
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Invoices");
-        String invoiceID = databaseReference.push().getKey(); // Tạo ID hóa đơn tự động
-        String purchaseDate = GetCurrentDate.getCurrentDate(); // Lấy ngày hiện tại
-        String note = noted.getText().toString().trim(); // Lấy ghi chú
-        String totalCashStr = edtTotalCash.getText().toString().trim();
-        String customerPayStr = edtCustomerPaid.getText().toString().trim();
+        String invoiceID = databaseReference.push().getKey();
+        String purchaseDate = GetCurrentDate.getCurrentDateTime();
+        String note = noted.getText().toString().trim();
 
-        if (!totalCashStr.isEmpty() && !customerPayStr.isEmpty() && itemList != null && !itemList.isEmpty()) {
-            int totalCash = Integer.parseInt(totalCashStr);
-            int customerPay = Integer.parseInt(customerPayStr);
-            int changeOfCustomer = customerPay - totalCash;
+        //Lấy dữ liệu từ các TextView và kiểm tra tính hợp lệ
+        String totalCashStr = totalCash.getText().toString().trim();
+        String customerPayStr = customerPaid.getText().toString().trim();
+        String changeOfCustomerStr = changeOfCustomer.getText().toString().trim();
 
+        totalCashStr = totalCashStr.replaceAll("[^\\d]", "");
+        customerPayStr = customerPayStr.replaceAll("[^\\d]", "");
+        changeOfCustomerStr = changeOfCustomerStr.replaceAll("[^\\d]", "");
+
+        int totalCash1 = Integer.parseInt(totalCashStr);
+        int customerPay1 = Integer.parseInt(customerPayStr);
+        int changeOfCustomer1 = Integer.parseInt(changeOfCustomerStr);
+
+        // Lấy tên khách hàng từ TextView
+        String customerNameStr = customerName.getText().toString().trim();
+
+        if (TextUtils.isEmpty(customerNameStr)) {
+            Toast.makeText(context, "Vui lòng nhập tên khách hàng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (itemList != null && !itemList.isEmpty()) {
             MyBill myBill = new MyBill();
             myBill.setInvoiceID(invoiceID);
             myBill.setDateCreated(purchaseDate);
             myBill.setNote(note);
             myBill.setCustomerMobileNum(customerMobileNumber);
-            myBill.setTotalCash(totalCash);
-            myBill.setCustomerPaid(customerPay);
-            myBill.setChangeOfCustomer(changeOfCustomer);
+            myBill.setCustomerName(customerNameStr);
+            myBill.setTotalCash(totalCash1);
+            myBill.setCustomerPaid(customerPay1);
+            myBill.setChangeOfCustomer(changeOfCustomer1);
 
             int totalQuantity = 0;
             for (MyBill.Item item : itemList) {
@@ -167,11 +178,12 @@ public class PaymentActivity extends AppCompatActivity {
             totalQtyDrug.setText(String.valueOf(totalQuantity));
             myBill.setTotalQty(totalQuantity);
 
+            final int totalCashOne = totalCash1;
+
             DatabaseReference billRef = databaseReference.child(userMobileNumber).child(customerMobileNumber).child(invoiceID);
             billRef.setValue(myBill)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            // Lưu từng mục thuốc với khóa là idDrug
                             DatabaseReference itemsRef = billRef.child("items");
                             for (MyBill.Item item : itemList) {
                                 if (item.getIdDrug() != null && !item.getIdDrug().isEmpty()) {
@@ -186,17 +198,36 @@ public class PaymentActivity extends AppCompatActivity {
                                 }
                             }
                             CustomToast.showToastSuccessful(context, "Hóa đơn đã được lưu thành công");
-                            updateCustomerStats(totalCash);
-                            Intent intent = new Intent(PaymentActivity.this, HomeActivity.class);
+                            saveSomeInforInvoice(customerMobileNum.getText().toString(),invoiceID);
+                            updateCustomerStats(totalCashOne);
+                            Intent intent = new Intent(PaymentActivity.this, PrePaymentActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
                             finish();
                         } else {
-                            //CustomToast.showToastFailed(context, "Lỗi khi lưu hóa đơn");
+                            CustomToast.showToastFailed(context, "Lỗi khi lưu hóa đơn");
                         }
                     });
         } else {
-            //CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
+            CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
         }
+    }
+
+
+    private void saveSomeInforInvoice(String customerMobileNumber, String idInvoice) {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("InvoiceCustomer/" + "/" +user.getMobileNumber() + "/" + customerMobileNumber);
+        databaseReference.child(idInvoice).setValue(idInvoice)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+
+                            Log.d("Firebase", "Information saved successfully.");
+                        } else {
+                            Log.e("Firebase", "Failed to save information: " + task.getException().getMessage());
+                        }
+                    }
+                });
     }
 
     private void updateCustomerStats(int totalCashToAdd) {
@@ -237,27 +268,27 @@ public class PaymentActivity extends AppCompatActivity {
     }
 
 
-    private void getChangeOfCustomer() {
-        String customerPayStr = edtCustomerPaid.getText().toString().trim();
-        String totalCashStr = edtTotalCash.getText().toString().trim();
-
-        if (!customerPayStr.isEmpty() && !totalCashStr.isEmpty()) {
-            try {
-                double customerPay = Double.parseDouble(customerPayStr);
-                double totalCash = Double.parseDouble(totalCashStr);
-
-                double changeOfCustomer = customerPay - totalCash;
-
-                TextView textViewChange = findViewById(R.id.changeOfCustomer);
-                textViewChange.setText(String.valueOf(changeOfCustomer));
-
-            } catch (NumberFormatException e) {
-                CustomToast.showToastFailed(context, "Vui lòng nhập số hợp lệ");
-            }
-        } else {
-            CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
-        }
-    }
+//    private void getChangeOfCustomer() {
+//        String customerPayStr = customerPaid.getText().toString().trim();
+//        String totalCashStr = totalCash.getText().toString().trim();
+//
+//        if (!customerPayStr.isEmpty() && !totalCashStr.isEmpty()) {
+//            try {
+//                double customerPay = Double.parseDouble(customerPayStr);
+//                double totalCash = Double.parseDouble(totalCashStr);
+//
+//                double changeOfCustomer = customerPay - totalCash;
+//
+//                TextView textViewChange = findViewById(R.id.changeOfCustomer);
+//                textViewChange.setText(String.valueOf(changeOfCustomer));
+//
+//            } catch (NumberFormatException e) {
+//                //CustomToast.showToastFailed(context, "Vui lòng nhập số hợp lệ");
+//            }
+//        } else {
+//            //CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
+//        }
+//    }
 
 
     private void customerInfo(String customerMobileNum) {
@@ -299,8 +330,8 @@ public class PaymentActivity extends AppCompatActivity {
         dateCreated = findViewById(R.id.dateCreated);
         noted = findViewById(R.id.noted);
         toolbar_Payment = findViewById(R.id.toolbar_Payment);
-        edtCustomerPaid = findViewById(R.id.edtCustomerPaid);
-        edtTotalCash = findViewById(R.id.edtTotalCash);
+        customerPaid = findViewById(R.id.customerPaid);
+        totalCash = findViewById(R.id.totalCash);
         changeOfCustomer = findViewById(R.id.changeOfCustomer);
         btnSaveBill = findViewById(R.id.btnSaveBill);
         viewPayment = findViewById(R.id.viewPayment);

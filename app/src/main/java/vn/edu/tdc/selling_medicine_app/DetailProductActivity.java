@@ -34,11 +34,11 @@ import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class DetailProductActivity extends AppCompatActivity {
 
-    Toolbar toolbar_DetailProduct;
-    ImageView ivMedicine;
-    TextView qtyInventory,expiryDate,sideEffects,dosage,indications,strength,form,price,drugName;
-    Product product = new Product();
-    Context context;
+    private Toolbar toolbar_DetailProduct;
+    private ImageView ivMedicine;
+    private TextView qtySelling,expiryDate,sideEffects,dosage,indications,strength,form,price,drugName;
+    private Product product = new Product();
+    private Context context;
     private String idDrug;
     private AlertDialog editProductDialog;
     private  User user = new User();
@@ -83,7 +83,7 @@ public class DetailProductActivity extends AppCompatActivity {
                     strength.setText(product.getStrength());
                     dosage.setText(product.getDosage());
                     sideEffects.setText(product.getSideEffects());
-                    qtyInventory.setText(FormatNumber.formatNumber(product.getQtyInventory()));
+                    qtySelling.setText(FormatNumber.formatNumber(product.getQtySelling()));
                 }
             }
 
@@ -108,7 +108,7 @@ public class DetailProductActivity extends AppCompatActivity {
         EditText dosageEditText = dialogView.findViewById(R.id.dosage);
         EditText sideEffectsEditText = dialogView.findViewById(R.id.sideEffects);
         EditText expiryDateEditText = dialogView.findViewById(R.id.expiryDate);
-        EditText qtyInventoryEditText = dialogView.findViewById(R.id.qtyInventory);
+        EditText qtySellingEditText = dialogView.findViewById(R.id.qtySelling);
 
         drugNameEditText.setText(product.getDrugName());
         priceEditText.setText(String.valueOf(product.getPrice()));
@@ -118,7 +118,7 @@ public class DetailProductActivity extends AppCompatActivity {
         dosageEditText.setText(product.getDosage());
         sideEffectsEditText.setText(product.getSideEffects());
         expiryDateEditText.setText(product.getExpiryDate());
-        qtyInventoryEditText.setText(String.valueOf(product.getQtyInventory()));
+        qtySellingEditText.setText(String.valueOf(product.getQtySelling()));
 
         dialogBuilder.setTitle("Cập nhật thông tin sản phẩm");
         dialogBuilder.setPositiveButton("Cập nhật", new DialogInterface.OnClickListener() {
@@ -131,15 +131,15 @@ public class DetailProductActivity extends AppCompatActivity {
                 String _dosage = dosageEditText.getText().toString().trim();
                 String _sideEffects = sideEffectsEditText.getText().toString().trim();
                 String _expiryDate = expiryDateEditText.getText().toString().trim();
-                String _qtyInventory = qtyInventoryEditText.getText().toString().trim();
+                String _qtySelling = qtySellingEditText.getText().toString().trim();
 
                 String _imageDrugUrl = product.getImageDrug();
 
                 if (_drugName.isEmpty() || _price.isEmpty() || _form.isEmpty() || _strength.isEmpty() ||
-                        _indications.isEmpty() || _dosage.isEmpty() || _sideEffects.isEmpty() || _expiryDate.isEmpty() || _qtyInventory.isEmpty()) {
+                        _indications.isEmpty() || _dosage.isEmpty() || _sideEffects.isEmpty() || _expiryDate.isEmpty() || _qtySelling.isEmpty()) {
                     CustomToast.showToastFailed(context,"Vui lòng nhập đầy đủ thông tin sản phẩm");
                 } else {
-                    editInfoProduct(_imageDrugUrl,_drugName,_price,_form,_strength,_indications,_dosage,_sideEffects,_expiryDate,_qtyInventory);
+                    editInfoProduct(_imageDrugUrl,_drugName,_price,_form,_strength,_indications,_dosage,_sideEffects,_expiryDate,_qtySelling);
                 }
             }
         });
@@ -151,7 +151,7 @@ public class DetailProductActivity extends AppCompatActivity {
         editProductDialog = dialogBuilder.create();
         editProductDialog.show();
     }
-    private void editInfoProduct(String newDrugImage, String newDrugName, String newPrice, String newForm, String newStrength, String newIndications, String newDosage, String newSideEffects, String newExpiryDate, String newQtyInventory) {
+    private void editInfoProduct(String newDrugImage, String newDrugName, String newPrice, String newForm, String newStrength, String newIndications, String newDosage, String newSideEffects, String newExpiryDate, String newQtySelling) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/"+user.getMobileNumber());
         databaseReference.child(product.getIdDrug()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -167,14 +167,14 @@ public class DetailProductActivity extends AppCompatActivity {
                     productToUpdate.setDosage(newDosage);
                     productToUpdate.setSideEffects(newSideEffects);
                     productToUpdate.setExpiryDate(newExpiryDate);
-                    productToUpdate.setQtyInventory(Integer.parseInt(newQtyInventory));
+                    productToUpdate.setQtySelling(Integer.parseInt(newQtySelling));
 
                     databaseReference.child(product.getIdDrug()).setValue(productToUpdate)
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     CustomToast.showToastSuccessful(context,"Cập nhật thông tin sản phẩm thành công");
-                                    showNewData(newDrugName, newPrice, newForm, newStrength, newIndications, newDosage, newSideEffects, newExpiryDate, newQtyInventory);
+                                    showNewData(newDrugName, newPrice, newForm, newStrength, newIndications, newDosage, newSideEffects, newExpiryDate, newQtySelling);
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {
@@ -197,7 +197,7 @@ public class DetailProductActivity extends AppCompatActivity {
 
     private void showNewData(String drugNameText, String priceText, String formText, String strengthText,
                              String indicationsText, String dosageText, String sideEffectsText,
-                             String expiryDateText, String qtyInventoryText) {
+                             String expiryDateText, String qtySellingText) {
         drugName.setText(drugNameText);
         form.setText(formText);
         strength.setText(strengthText);
@@ -205,13 +205,13 @@ public class DetailProductActivity extends AppCompatActivity {
         dosage.setText(dosageText);
         sideEffects.setText(sideEffectsText);
         expiryDate.setText(expiryDateText);
-        qtyInventory.setText(qtyInventoryText);
+        qtySelling.setText(qtySellingText);
 
         // Format và hiển thị giá sản phẩm
         int priceValue = Integer.parseInt(priceText);
         price.setText(FormatNumber.formatNumber(priceValue) + " VND");
-        int qtyInventoryValue = Integer.parseInt(qtyInventoryText);
-        qtyInventory.setText(FormatNumber.formatNumber(qtyInventoryValue));
+        int qtySellingValue = Integer.parseInt(qtySellingText);
+        qtySelling.setText(FormatNumber.formatNumber(qtySellingValue));
 
         product.setDrugName(drugNameText);
         product.setPrice(priceValue);
@@ -221,13 +221,13 @@ public class DetailProductActivity extends AppCompatActivity {
         product.setDosage(dosageText);
         product.setSideEffects(sideEffectsText);
         product.setExpiryDate(expiryDateText);
-        product.setQtyInventory(Integer.parseInt(qtyInventoryText));
+        product.setQtySelling(Integer.parseInt(qtySellingText));
     }
 
     private void setControl() {
         toolbar_DetailProduct = findViewById(R.id.toolbar_DetailProduct);
         ivMedicine = findViewById(R.id.ivMedicine);
-        qtyInventory = findViewById(R.id.qtyInventory);
+        qtySelling = findViewById(R.id.qtySelling);
         expiryDate = findViewById(R.id.expiryDate);
         sideEffects = findViewById(R.id.sideEffects);
         dosage = findViewById(R.id.dosage);

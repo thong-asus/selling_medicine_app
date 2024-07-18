@@ -17,7 +17,7 @@
             android:id="@+id/toolbar_customerList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:title="Danh sách khách hàng" />
+            app:title="Danh sách khách hàng"/>
 
         <View
             android:layout_width="match_parent"
@@ -75,6 +75,8 @@
                 android:layout_height="match_parent">
 
                 <androidx.recyclerview.widget.RecyclerView
+                    android:scrollbarThumbVertical="@color/divider_color"
+                    android:scrollbars="vertical"
                     android:id="@+id/recycleview_customerList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -82,18 +84,28 @@
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-            <TextView
-                android:id="@+id/tvNoAvailableCustomer"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:layout_gravity="center"
-                android:layout_marginTop="20dp"
-                android:text="Danh sách khách hàng trống"
-                android:textAlignment="center"
-                android:textColor="#000"
-                android:textSize="18dp"
-                android:textStyle="bold|italic"
-                android:visibility="gone" />
+                android:id="@+id/noDataAvailable"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/nodata_available"/>
+                <TextView
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Danh sách khách hàng rỗng!"
+                    android:textAlignment="center"
+                    android:textSize="18dp"
+                    android:textStyle="bold|italic"
+                    android:textColor="#000"/>
+            </LinearLayout>
 
         </FrameLayout>
 

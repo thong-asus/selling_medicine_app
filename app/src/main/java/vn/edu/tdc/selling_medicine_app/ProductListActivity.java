@@ -1,6 +1,7 @@
 package vn.edu.tdc.selling_medicine_app;
 
 import static android.content.ContentValues.TAG;
+import static android.view.View.VISIBLE;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -24,8 +25,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -42,11 +47,13 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
@@ -62,10 +69,10 @@ public class ProductListActivity extends AppCompatActivity {
 
     private Toolbar toolbar_productList;
     private TextInputEditText search_productList;
+    private LinearLayout noDataAvailable;
     private ImageView btn_filter_productList;
     private SwipeRefreshLayout swipeRefresh;
     private RecyclerView recycleview_productList;
-    private TextView tvNoAvailableProduct;
     private Context context;
     private List<Product> productList = new ArrayList<>();
     private List<Product> originalProductList = new ArrayList<>();
@@ -90,6 +97,303 @@ public class ProductListActivity extends AppCompatActivity {
 
     }
 
+    private void showFilterDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.custom_dialog_filter_products, null);
+        builder.setView(dialogView);
+
+        Spinner spinnerSortByProductName = dialogView.findViewById(R.id.spinnerSortByProductName);
+        Spinner spinnerSortByDate = dialogView.findViewById(R.id.spinnerSortByDate);
+        Spinner spinnerSortByProductExpiry = dialogView.findViewById(R.id.spinnerSortByProductExpiry);
+        Spinner spinnerSortByQtySelling = dialogView.findViewById(R.id.spinnerSortByQtySelling);
+        Button btnApplyFilter = dialogView.findViewById(R.id.btnApplyFilter);
+
+        ArrayAdapter<CharSequence> adapterName = ArrayAdapter.createFromResource(this,
+                R.array.sort_by_name_customer, android.R.layout.simple_spinner_item);
+        adapterName.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByProductName.setAdapter(adapterName);
+
+        ArrayAdapter<CharSequence> adapterDate = ArrayAdapter.createFromResource(this,
+                R.array.sort_customer_by_date, android.R.layout.simple_spinner_item);
+        adapterDate.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByDate.setAdapter(adapterDate);
+
+        ArrayAdapter<CharSequence> adapterExpiry = ArrayAdapter.createFromResource(this,
+                R.array.sort_by_product_expiry_date, android.R.layout.simple_spinner_item);
+        adapterExpiry.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByProductExpiry.setAdapter(adapterExpiry);
+
+        ArrayAdapter<CharSequence> adapterQtySelling = ArrayAdapter.createFromResource(this,
+                R.array.sort_by_product_selling, android.R.layout.simple_spinner_item);
+        adapterQtySelling.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByQtySelling.setAdapter(adapterQtySelling);
+
+        final AlertDialog dialog = builder.create();
+
+        btnApplyFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String selectedNameOption = spinnerSortByProductName.getSelectedItem().toString();
+                String selectedDateOption = spinnerSortByDate.getSelectedItem().toString();
+                String selectedProductExpiryOption = spinnerSortByProductExpiry.getSelectedItem().toString();
+                String selectedQtySellingOption = spinnerSortByQtySelling.getSelectedItem().toString();
+                handleFilterSelection(selectedNameOption, selectedDateOption, selectedProductExpiryOption, selectedQtySellingOption);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+    private void handleFilterSelection(String nameOption, String dateOption, String expiryOption, String qtySellingOption) {
+        List<Product> filteredProducts = new ArrayList<>(originalProductList);
+
+        // Lọc theo tên sản phẩm
+        if (!nameOption.equals("Không chọn")) {
+            if (nameOption.equals("Từ A-Z")) {
+                Collections.sort(filteredProducts, new Comparator<Product>() {
+                    @Override
+                    public int compare(Product p1, Product p2) {
+                        return p1.getDrugName().compareTo(p2.getDrugName());
+                    }
+                });
+            } else if (nameOption.equals("Từ Z-A")) {
+                Collections.sort(filteredProducts, new Comparator<Product>() {
+                    @Override
+                    public int compare(Product p1, Product p2) {
+                        return p2.getDrugName().compareTo(p1.getDrugName());
+                    }
+                });
+            }
+        }
+
+        // Lọc theo ngày tạo
+        if (!dateOption.equals("Không chọn")) {
+            switch (dateOption) {
+                case "Mới nhất":
+                    Collections.sort(filteredProducts, new Comparator<Product>() {
+                        @Override
+                        public int compare(Product p1, Product p2) {
+                            return p2.getDateCreated().compareTo(p1.getDateCreated());
+                        }
+                    });
+                    break;
+                case "Cũ nhất":
+                    Collections.sort(filteredProducts, new Comparator<Product>() {
+                        @Override
+                        public int compare(Product p1, Product p2) {
+                            return p1.getDateCreated().compareTo(p2.getDateCreated());
+                        }
+                    });
+                    break;
+                case "Hôm nay":
+                    filterByDateRange(filteredProducts, "today");
+                    break;
+                case "Hôm qua":
+                    filterByDateRange(filteredProducts, "yesterday");
+                    break;
+                case "Tuần này":
+                    filterByDateRange(filteredProducts, "this_week");
+                    break;
+                case "Tháng này":
+                    filterByDateRange(filteredProducts, "this_month");
+                    break;
+            }
+        }
+
+        // Lọc theo hạn sử dụng sản phẩm
+        if (!expiryOption.equals("Không chọn")) {
+            filterByProductExpiry(filteredProducts, expiryOption);
+        }
+
+        // Lọc theo số lượng bán
+        if (!qtySellingOption.equals("Không chọn")) {
+            filterByQtySelling(filteredProducts, qtySellingOption);
+        }
+        if(!filteredProducts.isEmpty()){
+            itemProductAdapter.updateData(filteredProducts);
+        } else {
+            CustomToast.showToastFailed(context,"Không tìm thấy sản phẩm nào");
+        }
+    }
+
+    private void filterByDateRange(List<Product> products, String dateRangeType) {
+        List<Product> filteredList = new ArrayList<>();
+        String currentDate = GetCurrentDate.getCurrentDate();
+        String[] parts = currentDate.split(" ")[0].split("/");
+
+        int currentDay = Integer.parseInt(parts[0]);
+        int currentMonth = Integer.parseInt(parts[1]);
+        int currentYear = Integer.parseInt(parts[2]);
+
+        Calendar todayCalendar = Calendar.getInstance();
+        todayCalendar.set(Calendar.DAY_OF_MONTH, currentDay);
+        todayCalendar.set(Calendar.MONTH, currentMonth - 1);
+        todayCalendar.set(Calendar.YEAR, currentYear);
+
+        Calendar productCalendar = Calendar.getInstance();
+
+        for (Product product : products) {
+            String productDate = product.getDateCreated();
+            String[] productParts = productDate.split(" ")[0].split("/");
+
+            int productDay = Integer.parseInt(productParts[0]);
+            int productMonth = Integer.parseInt(productParts[1]);
+            int productYear = Integer.parseInt(productParts[2]);
+
+            productCalendar.set(Calendar.DAY_OF_MONTH, productDay);
+            productCalendar.set(Calendar.MONTH, productMonth - 1);
+            productCalendar.set(Calendar.YEAR, productYear);
+
+            boolean isInRange = false;
+
+            switch (dateRangeType) {
+                case "today":
+                    isInRange = isSameDay(todayCalendar, productCalendar);
+                    break;
+                case "yesterday":
+                    isInRange = isYesterday(todayCalendar, productCalendar);
+                    break;
+                case "this_week":
+                    isInRange = isThisWeek(todayCalendar, productCalendar);
+                    break;
+                case "this_month":
+                    isInRange = isThisMonth(todayCalendar, productCalendar);
+                    break;
+                default:
+                    break;
+            }
+
+            if (isInRange) {
+                filteredList.add(product);
+            }
+        }
+
+        products.clear();
+        products.addAll(filteredList);
+    }
+
+    private boolean isSameDay(Calendar cal1, Calendar cal2) {
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private boolean isYesterday(Calendar today, Calendar product) {
+        Calendar yesterday = (Calendar) today.clone();
+        yesterday.add(Calendar.DATE, -1);
+        return isSameDay(yesterday, product);
+    }
+
+    private boolean isThisWeek(Calendar today, Calendar product) {
+        int currentWeek = today.get(Calendar.WEEK_OF_YEAR);
+        int productWeek = product.get(Calendar.WEEK_OF_YEAR);
+        int currentYear = today.get(Calendar.YEAR);
+        int productYear = product.get(Calendar.YEAR);
+
+        return currentYear == productYear && currentWeek == productWeek;
+    }
+
+    private boolean isThisMonth(Calendar today, Calendar product) {
+        return today.get(Calendar.YEAR) == product.get(Calendar.YEAR) &&
+                today.get(Calendar.MONTH) == product.get(Calendar.MONTH);
+    }
+
+    private void filterByProductExpiry(List<Product> products, String expiryOption) {
+        List<Product> filteredList = new ArrayList<>();
+        Calendar now = Calendar.getInstance();
+
+        for (Product product : products) {
+            String expiryDateStr = product.getExpiryDate();
+            String[] parts = expiryDateStr.split("/");
+            int day = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]) - 1; // Calendar month is 0-based
+            int year = Integer.parseInt(parts[2]);
+
+            Calendar expiryDate = Calendar.getInstance();
+            expiryDate.set(year, month, day);
+
+            long diff = expiryDate.getTimeInMillis() - now.getTimeInMillis();
+            long days = TimeUnit.MILLISECONDS.toDays(diff);
+
+            boolean isInRange = false;
+            switch (expiryOption) {
+                case "<1 Tháng":
+                    isInRange = days < 30;
+                    break;
+                case "<3 Tháng":
+                    isInRange = days < 90;
+                    break;
+                case "<6 Tháng":
+                    isInRange = days < 180;
+                    break;
+                case "<1 Năm":
+                    isInRange = days < 365;
+                    break;
+                case ">1 Năm":
+                    isInRange = days > 365;
+                    break;
+            }
+
+            if (isInRange) {
+                filteredList.add(product);
+            }
+        }
+
+        products.clear();
+        products.addAll(filteredList);
+    }
+
+    private void filterByQtySelling(List<Product> products, String qtySellingOption) {
+        List<Product> filteredList = new ArrayList<>(products); // Clone the original list
+
+        switch (qtySellingOption) {
+            case "Cao nhất":
+                Collections.sort(filteredList, new Comparator<Product>() {
+                    @Override
+                    public int compare(Product p1, Product p2) {
+                        return Integer.compare(p2.getQtySelling(), p1.getQtySelling());
+                    }
+                });
+                break;
+            case "Thấp nhất":
+                Collections.sort(filteredList, new Comparator<Product>() {
+                    @Override
+                    public int compare(Product p1, Product p2) {
+                        return Integer.compare(p1.getQtySelling(), p2.getQtySelling());
+                    }
+                });
+                break;
+            case "<5":
+                filteredList.clear();
+                for (Product product : products) {
+                    if (product.getQtySelling() < 5) {
+                        filteredList.add(product);
+                    }
+                }
+                break;
+            case "5-10":
+                filteredList.clear();
+                for (Product product : products) {
+                    if (product.getQtySelling() >= 5 && product.getQtySelling() <= 10) {
+                        filteredList.add(product);
+                    }
+                }
+                break;
+            case ">10":
+                filteredList.clear();
+                for (Product product : products) {
+                    if (product.getQtySelling() > 10) {
+                        filteredList.add(product);
+                    }
+                }
+                break;
+        }
+
+        products.clear();
+        products.addAll(filteredList);
+    }
+
+
     private void deleteAProduct() {
         SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(itemProductAdapter, this);
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeToDeleteCallback);
@@ -97,6 +401,12 @@ public class ProductListActivity extends AppCompatActivity {
     }
 
     private void setEvent() {
+        btn_filter_productList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFilterDialog();
+            }
+        });
         //đổ dữ liệu vào recycleview
         recycleview_productList.setLayoutManager(new LinearLayoutManager(this));
         itemProductAdapter = new Adapter_ItemProduct(productList, this);
@@ -164,6 +474,10 @@ public class ProductListActivity extends AppCompatActivity {
                     }
                 }
 
+                if (productList.isEmpty()) {
+                    noDataAvailable.setVisibility(VISIBLE);
+                } else {
+                    noDataAvailable.setVisibility(View.GONE);
                 Collections.sort(productList, new Comparator<Product>() {
                     DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
@@ -180,6 +494,7 @@ public class ProductListActivity extends AppCompatActivity {
                         }
                     }
                 });
+            }
                 itemProductAdapter.notifyDataSetChanged();
             }
 
@@ -206,7 +521,7 @@ public class ProductListActivity extends AppCompatActivity {
         EditText dosage = dialogView.findViewById(R.id.dosage);
         EditText sideEffects = dialogView.findViewById(R.id.sideEffects);
         EditText expiryDate = dialogView.findViewById(R.id.expiryDate);
-        EditText qtyInventory = dialogView.findViewById(R.id.qtyInventory);
+        EditText qtyInventory = dialogView.findViewById(R.id.qtySelling);
 
         // Set EditorActionListeners for each EditText
         setEditorActionListener(drugName, price, "Vui lòng nhập tên sản phẩm");
@@ -256,7 +571,7 @@ public class ProductListActivity extends AppCompatActivity {
                         imageDrugUrl = "https://example.com/default_image.jpg";
                     }
 
-                    String dateCreated = GetCurrentDate.getCurrentDate();
+                    String dateCreated = GetCurrentDate.getCurrentDateTime();
 
                     addNewProduct(imageDrugUrl, nameDrug, formDrug, strengthDrug,
                             indicationsDrug, dosageDrug, sideEffectsDrug, expiryDateDrug,
@@ -356,7 +671,7 @@ public class ProductListActivity extends AppCompatActivity {
         btn_filter_productList = findViewById(R.id.btn_filter_productList);
         swipeRefresh = findViewById(R.id.swipeRefresh);
         recycleview_productList = findViewById(R.id.recycleview_productList);
-        tvNoAvailableProduct = findViewById(R.id.tvNoAvailableProduct);
+        noDataAvailable = findViewById(R.id.noDataAvailable);
     }
     private void hideKeyboard() {
         View view = this.getCurrentFocus();

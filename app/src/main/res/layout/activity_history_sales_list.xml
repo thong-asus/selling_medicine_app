@@ -75,6 +75,8 @@
                 android:layout_height="match_parent">
 
                 <androidx.recyclerview.widget.RecyclerView
+                    android:scrollbars="vertical"
+                    android:scrollbarThumbVertical="@color/divider_color"
                     android:id="@+id/recycleview_historySales"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -82,17 +84,28 @@
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-            <TextView
-                android:id="@+id/tvNoAvailableHistorySales"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:layout_gravity="center"
-                android:layout_marginTop="20dp"
-                android:text="Danh sách hóa đơn trống"
-                android:textAlignment="center"
-                android:textColor="#000"
-                android:textSize="25dp"
-                android:visibility="gone" />
+                android:id="@+id/noDataAvailable"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/nodata_available"/>
+                <TextView
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Không có hóa đơn nào!"
+                    android:textAlignment="center"
+                    android:textSize="18dp"
+                    android:textStyle="bold|italic"
+                    android:textColor="#000"/>
+            </LinearLayout>
 
         </FrameLayout>
 

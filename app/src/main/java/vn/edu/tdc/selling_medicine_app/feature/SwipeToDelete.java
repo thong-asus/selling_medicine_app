@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import vn.edu.tdc.selling_medicine_app.R;
 import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemCustomer;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemInvoice;
+import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemInvoiceCustomerBought;
 import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemMedicineAddedPrePayment;
 import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemProduct;
 
@@ -22,6 +24,8 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
     private Adapter_ItemCustomer mItemCustomerAdapter;
     private Adapter_ItemMedicineAddedPrePayment mAdapterItemMedicineAddedPrePayment;
     private Adapter_ItemProduct mItemProductAdapter;
+    private Adapter_ItemInvoice mItemInvoiceAdapter;
+    private Adapter_ItemInvoiceCustomerBought mAdapterItemInvoiceCustomerBought;
 
     private Drawable icon;
     private final ColorDrawable background;
@@ -39,6 +43,20 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
     public SwipeToDelete(Adapter_ItemProduct itemProductAdapter, Context context) {
         super(0, ItemTouchHelper.LEFT);
         this.mItemProductAdapter = itemProductAdapter;
+        this.context = context;
+        this.icon = ContextCompat.getDrawable(context, R.drawable.ic_delete);
+        this.background = new ColorDrawable(Color.WHITE);
+    }
+    public SwipeToDelete(Adapter_ItemInvoice itemInvoiceAdapter, Context context) {
+        super(0, ItemTouchHelper.LEFT);
+        this.mItemInvoiceAdapter = itemInvoiceAdapter;
+        this.context = context;
+        this.icon = ContextCompat.getDrawable(context, R.drawable.ic_delete);
+        this.background = new ColorDrawable(Color.WHITE);
+    }
+    public SwipeToDelete(Adapter_ItemInvoiceCustomerBought adapterItemInvoiceCustomerBought, Context context) {
+        super(0, ItemTouchHelper.LEFT);
+        this.mAdapterItemInvoiceCustomerBought = adapterItemInvoiceCustomerBought;
         this.context = context;
         this.icon = ContextCompat.getDrawable(context, R.drawable.ic_delete);
         this.background = new ColorDrawable(Color.WHITE);
@@ -71,6 +89,14 @@ public class SwipeToDelete extends ItemTouchHelper.SimpleCallback {
         }
         if (mItemCustomerAdapter != null) {
             mItemCustomerAdapter.deleteACustomer(position);
+            return;
+        }
+        if (mItemInvoiceAdapter != null) {
+            mItemInvoiceAdapter.deleteAInvoice(position);
+            return;
+        }
+        if (mAdapterItemInvoiceCustomerBought != null) {
+            mAdapterItemInvoiceCustomerBought.deleteAInvoiceOfCustomer(position);
             return;
         }
 //        if (mItemCustomerAdapter != null) {

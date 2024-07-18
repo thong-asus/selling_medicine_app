@@ -1,5 +1,8 @@
 package vn.edu.tdc.selling_medicine_app;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,7 +25,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -33,8 +41,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
@@ -49,8 +59,9 @@ import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemCustomer;
 public class CustomerListActivity extends AppCompatActivity {
     private AlertDialog addCustomerDialog;
     private Toolbar toolbar_customerList;
-    TextInputEditText search_customerList;
+    private TextInputEditText search_customerList;
     private RecyclerView recyclerView_customerList;
+    private LinearLayout noDataAvailable;
     private Adapter_ItemCustomer itemCustomerAdapter;
     private List<Customer> customerList = new ArrayList<>();
     private List<Customer> originalCustomerList = new ArrayList<>();
@@ -58,6 +69,7 @@ public class CustomerListActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefresh;
     private ReloadSound reloadSound;
     private  User user = new User();
+    private ImageView btn_filter_customerList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,16 +79,292 @@ public class CustomerListActivity extends AppCompatActivity {
         context = this;
         user = ReceiveUserInfo.getUserInfo(context);
 
+
+
         /////////////////////////////
         reloadSound = new ReloadSound(this);
         setInitialization();
+        //////////////////////////////////////////////////////////
         getAllCustomer();
         deleteACustomer();
         setEvent();
     }
 
+    private void showFilterDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.custom_dialog_filter_customers, null);
+        builder.setView(dialogView);
+
+        Spinner spinnerSortByName = dialogView.findViewById(R.id.spinnerSortByName);
+        Spinner spinnerSortByDate = dialogView.findViewById(R.id.spinnerSortByDate);
+        Spinner spinnerSortByPurchaseCount = dialogView.findViewById(R.id.spinnerSortByPurchaseCount);
+        Spinner spinnerSortByTotalSpent = dialogView.findViewById(R.id.spinnerSortByTotalSpent);
+        Button btnApplyFilter = dialogView.findViewById(R.id.btnApplyFilter);
+
+        ArrayAdapter<CharSequence> adapterName = ArrayAdapter.createFromResource(this,
+                R.array.sort_by_name_customer, android.R.layout.simple_spinner_item);
+        adapterName.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByName.setAdapter(adapterName);
+
+        ArrayAdapter<CharSequence> adapterDate = ArrayAdapter.createFromResource(this,
+                R.array.sort_customer_by_date, android.R.layout.simple_spinner_item);
+        adapterDate.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByDate.setAdapter(adapterDate);
+
+        ArrayAdapter<CharSequence> adapterPurchaseCount = ArrayAdapter.createFromResource(this,
+                R.array.sort_customer_by_qty_bought, android.R.layout.simple_spinner_item);
+        adapterPurchaseCount.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByPurchaseCount.setAdapter(adapterPurchaseCount);
+
+        ArrayAdapter<CharSequence> adapterTotalSpent = ArrayAdapter.createFromResource(this,
+                R.array.sort_customer_by_total_cash, android.R.layout.simple_spinner_item);
+        adapterTotalSpent.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSortByTotalSpent.setAdapter(adapterTotalSpent);
+
+        final AlertDialog dialog = builder.create();
+
+        btnApplyFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String selectedNameOption = spinnerSortByName.getSelectedItem().toString();
+                String selectedDateOption = spinnerSortByDate.getSelectedItem().toString();
+                String selectedPurchaseCountOption = spinnerSortByPurchaseCount.getSelectedItem().toString();
+                String selectedTotalSpentOption = spinnerSortByTotalSpent.getSelectedItem().toString();
+                handleFilterSelection(selectedNameOption, selectedDateOption, selectedPurchaseCountOption, selectedTotalSpentOption);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void handleFilterSelection(String nameOption, String dateOption, String purchaseCountOption, String totalSpentOption) {
+        List<Customer> filteredCustomers = new ArrayList<>(originalCustomerList);
+
+        //Lọc theo tên KH
+        if (!nameOption.equals("Không chọn")) {
+            if (nameOption.equals("Từ A-Z")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return c1.getCustomerName().compareTo(c2.getCustomerName());
+                    }
+                });
+            } else if (nameOption.equals("Từ Z-A")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return c2.getCustomerName().compareTo(c1.getCustomerName());
+                    }
+                });
+            }
+        }
+
+        //Lọc theo ngày thêm KH
+        if (!dateOption.equals("Không chọn")) {
+            Date startDate = null;
+            Date endDate = null;
+
+            switch (dateOption) {
+                case "Mới nhất":
+                    Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                        @Override
+                        public int compare(Customer c1, Customer c2) {
+                            return c2.getDateCreated().compareTo(c1.getDateCreated());
+                        }
+                    });
+                    break;
+                case "Cũ nhất":
+                    Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                        @Override
+                        public int compare(Customer c1, Customer c2) {
+                            return c1.getDateCreated().compareTo(c2.getDateCreated());
+                        }
+                    });
+                    break;
+                case "Hôm nay":
+                    filterByDateRange(filteredCustomers, "today");
+                    break;
+                case "Hôm qua":
+                    filterByDateRange(filteredCustomers, "yesterday");
+                    break;
+                case "Tuần này":
+                    filterByDateRange(filteredCustomers, "this_week");
+                    break;
+                case "Tháng này":
+                    filterByDateRange(filteredCustomers, "this_month");
+                    break;
+            }
+        }
+
+        //Lọc theo số lần mua
+        if (!purchaseCountOption.equals("Không chọn")) {
+            if (purchaseCountOption.equals("Cao nhất")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return Integer.compare(c2.getQtyBought(), c1.getQtyBought());
+                    }
+                });
+            } else if (purchaseCountOption.equals("Thấp nhất")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return Integer.compare(c1.getQtyBought(), c2.getQtyBought());
+                    }
+                });
+            } else if (purchaseCountOption.equals("<5")) {
+                filteredCustomers = filterByQtyBought(filteredCustomers, 0, 5);
+            } else if (purchaseCountOption.equals("5-10")) {
+                filteredCustomers = filterByQtyBought(filteredCustomers, 5, 10);
+            } else if (purchaseCountOption.equals(">10")) {
+                filteredCustomers = filterByQtyBought(filteredCustomers, 10, Integer.MAX_VALUE);
+            }
+        }
+        //Lọc theo tổng tiền
+        if (!totalSpentOption.equals("Không chọn")) {
+            if (totalSpentOption.equals("Cao nhất")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return Double.compare(c2.getTotalCash(), c1.getTotalCash());
+                    }
+                });
+            } else if (totalSpentOption.equals("Thấp nhất")) {
+                Collections.sort(filteredCustomers, new Comparator<Customer>() {
+                    @Override
+                    public int compare(Customer c1, Customer c2) {
+                        return Double.compare(c1.getTotalCash(), c2.getTotalCash());
+                    }
+                });
+            } else if (totalSpentOption.equals("<5000")) {
+                filteredCustomers = filterByTotalCash(filteredCustomers, 0, 5000);
+            } else if (totalSpentOption.equals("5000-10000")) {
+                filteredCustomers = filterByTotalCash(filteredCustomers, 5000, 10000);
+            } else if (totalSpentOption.equals("10000-20000")) {
+                filteredCustomers = filterByTotalCash(filteredCustomers, 10000, 20000);
+            } else if (totalSpentOption.equals("20000-50000")) {
+                filteredCustomers = filterByTotalCash(filteredCustomers, 20000, 50000);
+            } else if (totalSpentOption.equals(">50000")) {
+                filteredCustomers = filterByTotalCash(filteredCustomers, 50000, Double.MAX_VALUE);
+            }
+        }
+        if(!filteredCustomers.isEmpty()) {
+            itemCustomerAdapter.updateData(filteredCustomers);
+        } else {
+            CustomToast.showToastFailed(context,"Không tìm thấy khách hàng nào");
+        }
+    }
+
+    private void filterByDateRange(List<Customer> customers, String dateRangeType) {
+        List<Customer> filteredList = new ArrayList<>();
+        String currentDate = GetCurrentDate.getCurrentDate();
+        String[] parts = currentDate.split(" ")[0].split("/");
+
+        int currentDay = Integer.parseInt(parts[0]);
+        int currentMonth = Integer.parseInt(parts[1]);
+        int currentYear = Integer.parseInt(parts[2]);
+
+        Calendar todayCalendar = Calendar.getInstance();
+        todayCalendar.set(Calendar.DAY_OF_MONTH, currentDay);
+        todayCalendar.set(Calendar.MONTH, currentMonth - 1);
+        todayCalendar.set(Calendar.YEAR, currentYear);
+
+        Calendar customerCalendar = Calendar.getInstance();
+
+        for (Customer customer : customers) {
+            String customerDate = customer.getDateCreated();
+            String[] customerParts = customerDate.split(" ")[0].split("/");
+
+            int customerDay = Integer.parseInt(customerParts[0]);
+            int customerMonth = Integer.parseInt(customerParts[1]);
+            int customerYear = Integer.parseInt(customerParts[2]);
+
+            customerCalendar.set(Calendar.DAY_OF_MONTH, customerDay);
+            customerCalendar.set(Calendar.MONTH, customerMonth - 1);
+            customerCalendar.set(Calendar.YEAR, customerYear);
+
+            boolean isInRange = false;
+
+            switch (dateRangeType) {
+                case "today":
+                    isInRange = isSameDay(todayCalendar, customerCalendar);
+                    break;
+                case "yesterday":
+                    isInRange = isYesterday(todayCalendar, customerCalendar);
+                    break;
+                case "this_week":
+                    isInRange = isThisWeek(todayCalendar, customerCalendar);
+                    break;
+                case "this_month":
+                    isInRange = isThisMonth(todayCalendar, customerCalendar);
+                    break;
+                default:
+                    break;
+            }
+
+            if (isInRange) {
+                filteredList.add(customer);
+            }
+        }
+
+        customers.clear();
+        customers.addAll(filteredList);
+    }
+
+    private boolean isSameDay(Calendar cal1, Calendar cal2) {
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
+    }
+
+    private boolean isYesterday(Calendar today, Calendar customer) {
+        Calendar yesterday = (Calendar) today.clone();
+        yesterday.add(Calendar.DATE, -1);
+        return isSameDay(yesterday, customer);
+    }
+
+    private boolean isThisWeek(Calendar today, Calendar customer) {
+        int currentWeek = today.get(Calendar.WEEK_OF_YEAR);
+        int customerWeek = customer.get(Calendar.WEEK_OF_YEAR);
+        int currentYear = today.get(Calendar.YEAR);
+        int customerYear = customer.get(Calendar.YEAR);
+
+        return currentYear == customerYear && currentWeek == customerWeek;
+    }
+
+    private boolean isThisMonth(Calendar today, Calendar customer) {
+        return today.get(Calendar.YEAR) == customer.get(Calendar.YEAR) &&
+                today.get(Calendar.MONTH) == customer.get(Calendar.MONTH);
+    }
+
+
+    private List<Customer> filterByQtyBought(List<Customer> customers, int min, int max) {
+        List<Customer> filteredList = new ArrayList<>();
+        for (Customer customer : customers) {
+            if (customer.getQtyBought() >= min && customer.getQtyBought() <= max) {
+                filteredList.add(customer);
+            }
+        }
+        return filteredList;
+    }
+    private List<Customer> filterByTotalCash(List<Customer> customers, double min, double max) {
+        List<Customer> filteredList = new ArrayList<>();
+        for (Customer customer : customers) {
+            if (customer.getTotalCash() >= min && customer.getTotalCash() <= max) {
+                filteredList.add(customer);
+            }
+        }
+        return filteredList;
+    }
     private void setEvent() {
 
+        btn_filter_customerList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFilterDialog();
+            }
+        });
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -134,6 +422,8 @@ public class CustomerListActivity extends AppCompatActivity {
         toolbar_customerList = findViewById(R.id.toolbar_customerList);
         search_customerList = findViewById(R.id.search_customerList);
         swipeRefresh = findViewById(R.id.swipeRefresh);
+        noDataAvailable = findViewById(R.id.noDataAvailable);
+        btn_filter_customerList = findViewById(R.id.btn_filter_customerList);
         setSupportActionBar(toolbar_customerList);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -145,12 +435,13 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     private void getAllCustomer() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/"+user.getMobileNumber());
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/" + user.getMobileNumber());
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 customerList.clear();
                 originalCustomerList.clear();
+
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Customer customer = snapshot.getValue(Customer.class);
                     if (customer != null) {
@@ -158,19 +449,26 @@ public class CustomerListActivity extends AppCompatActivity {
                         originalCustomerList.add(customer);
                     }
                 }
-                Collections.sort(customerList, new Comparator<Customer>() {
-                    @Override
-                    public int compare(Customer c1, Customer c2) {
-                        return c2.getDateCreated().compareTo(c1.getDateCreated());
-                    }
-                });
 
-                Collections.sort(originalCustomerList, new Comparator<Customer>() {
-                    @Override
-                    public int compare(Customer c1, Customer c2) {
-                        return c2.getDateCreated().compareTo(c1.getDateCreated());
-                    }
-                });
+                if (customerList.isEmpty()) {
+                    noDataAvailable.setVisibility(VISIBLE);
+                } else {
+                    noDataAvailable.setVisibility(GONE);
+
+                    Collections.sort(customerList, new Comparator<Customer>() {
+                        @Override
+                        public int compare(Customer c1, Customer c2) {
+                            return c2.getDateCreated().compareTo(c1.getDateCreated());
+                        }
+                    });
+
+                    Collections.sort(originalCustomerList, new Comparator<Customer>() {
+                        @Override
+                        public int compare(Customer c1, Customer c2) {
+                            return c2.getDateCreated().compareTo(c1.getDateCreated());
+                        }
+                    });
+                }
 
                 itemCustomerAdapter.notifyDataSetChanged();
             }
@@ -181,6 +479,7 @@ public class CustomerListActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void deleteACustomer() {
         SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(itemCustomerAdapter, this);
@@ -241,7 +540,7 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void addNewCustomer(String mobileNumber, String fullName) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/"+user.getMobileNumber());
-        Customer newCustomer = new Customer(mobileNumber, fullName, GetCurrentDate.getCurrentDate(), 0, 0);
+        Customer newCustomer = new Customer(mobileNumber, fullName, GetCurrentDate.getCurrentDateTime(), 0, 0);
         databaseReference.child(newCustomer.getCustomerMobileNum()).setValue(newCustomer);
     }
 
