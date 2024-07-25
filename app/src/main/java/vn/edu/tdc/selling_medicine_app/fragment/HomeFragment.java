@@ -1,20 +1,22 @@
-package vn.edu.tdc.selling_medicine_app;
+package vn.edu.tdc.selling_medicine_app.fragment;
 
 import static android.content.ContentValues.TAG;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.PagerSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.Toast;
@@ -35,12 +37,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import vn.edu.tdc.selling_medicine_app.CustomerListActivity;
+import vn.edu.tdc.selling_medicine_app.HistorySalesListActivity;
+import vn.edu.tdc.selling_medicine_app.PrePaymentActivity;
+import vn.edu.tdc.selling_medicine_app.ProductListActivity;
+import vn.edu.tdc.selling_medicine_app.R;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.model.MyBill;
 import vn.edu.tdc.selling_medicine_app.model.User;
 import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemRecentInvoiceHome;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeFragment extends Fragment {
     private Toolbar toolbar_home;
     private View layout_home;
     private TextInputEditText search_home;
@@ -53,39 +60,36 @@ public class HomeActivity extends AppCompatActivity {
 
     private ArrayList<MyBill> recentInvoiceList;
     private DatabaseReference databaseReference;
-
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
         //nhận dữ liệu
-        context = this;
+        context = getContext();
         user = ReceiveUserInfo.getUserInfo(context);
-        setControl();
+        setControl(view);
         ////////////////////////////////////////////////
-        FirebaseApp.initializeApp(this);
+        FirebaseApp.initializeApp(context);
         //Khởi tạo db
         databaseReference = FirebaseDatabase.getInstance().getReference();
         setEvent();
         /////////////////////////set data cho recycleview 5 hóa đơn gần nhất////////////////////////////
         showItemInvoicesRecent();
         getCustomerMobiles();
+        return view;
     }
-
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         getCustomerMobiles();
     }
+
     private void showItemInvoicesRecent() {
-        //thiết lập mỗi lần lướt tới 1 item
         PagerSnapHelper pagerSnapHelper = new PagerSnapHelper();
         pagerSnapHelper.attachToRecyclerView(recycleview_recentInvoice);
-        // Khởi tạo RecyclerView
-        recycleview_recentInvoice.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        recycleview_recentInvoice.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         recentInvoiceList = new ArrayList<>();
-        adapterItemRecentInvoice = new Adapter_ItemRecentInvoiceHome(recentInvoiceList, this);
+        adapterItemRecentInvoice = new Adapter_ItemRecentInvoiceHome(recentInvoiceList, context);
         recycleview_recentInvoice.setAdapter(adapterItemRecentInvoice);
     }
 
@@ -112,6 +116,9 @@ public class HomeActivity extends AppCompatActivity {
                                 invoice.setDateCreated((String) invoiceMap.get("dateCreated"));
                                 invoice.setTotalCash(((Long) invoiceMap.get("totalCash")).intValue());
                                 invoice.setTotalQty(((Long) invoiceMap.get("totalQty")).intValue());
+
+                                String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
+                                invoice.setImageInvoice(imageUrl);
 
                                 List<MyBill.Item> itemsList = new ArrayList<>();
                                 HashMap<String, HashMap<String, Object>> itemsMap = (HashMap<String, HashMap<String, Object>>) invoiceMap.get("items");
@@ -144,12 +151,15 @@ public class HomeActivity extends AppCompatActivity {
                 });
 
                 List<MyBill> latestInvoices = allInvoices.subList(0, Math.min(5, allInvoices.size()));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapterItemRecentInvoice.setInvoiceList(latestInvoices);
-                    }
-                });
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (adapterItemRecentInvoice != null) {
+                            adapterItemRecentInvoice.setInvoiceList(latestInvoices);
+                        }
+                    });
+                } else {
+                    Log.e(TAG, "Fragment is not attached to an Activity");
+                }
             }
 
             @Override
@@ -158,7 +168,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
-
 
     private void getCustomerMobiles() {
         databaseReference.child("InvoiceCustomer/" + user.getMobileNumber()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -180,110 +189,52 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-
-
-
-
     private void setEvent() {
-        btn_statistic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(context, "Chuyển sang màn hình thống kê", Toast.LENGTH_SHORT).show();
-            }
+        btn_statistic.setOnClickListener(v -> Toast.makeText(context, "Chuyển sang màn hình thống kê", Toast.LENGTH_SHORT).show());
+        btn_payment.setOnClickListener(v -> {
+            Intent intent = new Intent(context, PrePaymentActivity.class);
+            startActivity(intent);
         });
-        btn_payment.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, PrePaymentActivity.class);
-                startActivity(intent);
-            }
+        btn_product.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ProductListActivity.class);
+            startActivity(intent);
         });
-        btn_product.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, ProductListActivity.class);
-                startActivity(intent);
-            }
-        });
-        btn_inventory.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btn_inventory.setOnClickListener(v -> {
 
-            }
         });
-        btn_customer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, CustomerListActivity.class);
-                startActivity(intent);
-            }
+        btn_customer.setOnClickListener(v -> {
+            Intent intent = new Intent(context, CustomerListActivity.class);
+            startActivity(intent);
         });
-        btn_history.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, HistorySalesListActivity.class);
-                startActivity(intent);
-            }
+        btn_history.setOnClickListener(v -> {
+            Intent intent = new Intent(context, HistorySalesListActivity.class);
+            startActivity(intent);
         });
         toolbar_home.setTitle("Xin chào, " + user.getFullname());
-        layout_home.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                hideKeyboard();
-                return false;
-            }
+        layout_home.setOnTouchListener((v, event) -> {
+            hideKeyboard();
+            return false;
         });
-
-        bottom_navigation.setOnNavigationItemSelectedListener(item -> {
-            switch (item.getItemId()) {
-                case 0:
-
-                    return true;
-                case 1:
-
-                    return true;
-                case 2:
-
-                    return true;
-                default:
-                    return false;
-            }
-        });
-
     }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-//        if (result != null) {
-//            if (result.getContents() == null) {
-//                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
-//            } else {
-//                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
-//                // Xử lý kết quả quét mã tại đây, ví dụ: hiển thị hoặc sử dụng cho xử lý tiếp theo
-//            }
-//        } else {
-//            super.onActivityResult(requestCode, resultCode, data);
-//        }
-//    }
 
-    private void setControl() {
-        toolbar_home = findViewById(R.id.toolbar_home);
-        layout_home = findViewById(R.id.layout_home);
-        search_home = findViewById(R.id.search_home);
-        recycleview_recentInvoice = findViewById(R.id.recycleview_recentInvoice);
-        btn_history = findViewById(R.id.btn_history);
-        btn_payment = findViewById(R.id.btn_payment);
-        btn_statistic = findViewById(R.id.btn_statistic);
-        btn_inventory = findViewById(R.id.btn_inventory);
-        btn_product = findViewById(R.id.btn_product);
-        btn_customer = findViewById(R.id.btn_customer);
-        bottom_navigation = findViewById(R.id.bottom_navigation);
+    private void setControl(View view) {
+        toolbar_home = view.findViewById(R.id.toolbar_home);
+        layout_home = view.findViewById(R.id.layout_home);
+        search_home = view.findViewById(R.id.search_home);
+        recycleview_recentInvoice = view.findViewById(R.id.recycleview_recentInvoice);
+        btn_history = view.findViewById(R.id.btn_history);
+        btn_payment = view.findViewById(R.id.btn_payment);
+        btn_statistic = view.findViewById(R.id.btn_statistic);
+        btn_inventory = view.findViewById(R.id.btn_inventory);
+        btn_product = view.findViewById(R.id.btn_product);
+        btn_customer = view.findViewById(R.id.btn_customer);
+        bottom_navigation = getActivity().findViewById(R.id.bottom_navigation); // Assumes BottomNavigationView is in Activity's layout
     }
 
     private void hideKeyboard() {
-        View view = this.getCurrentFocus();
+        View view = getActivity().getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }

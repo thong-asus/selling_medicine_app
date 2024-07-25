@@ -20,7 +20,7 @@
                 android:layout_height="150dp"
                 android:layout_gravity="center"
                 android:layout_marginBottom="10dp"
-                android:background="@color/loading" />
+                android:background="@drawable/chooseimage" />
 
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/prop_textInputLayout">

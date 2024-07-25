@@ -139,7 +139,6 @@
             android:id="@+id/tvAlreadyHaveAnAccount"
             android:gravity="center"
             android:textColor="#007ADA"
-            android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
     </LinearLayout>
 

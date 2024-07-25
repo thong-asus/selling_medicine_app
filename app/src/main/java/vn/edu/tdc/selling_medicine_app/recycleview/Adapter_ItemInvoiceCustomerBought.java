@@ -2,6 +2,7 @@ package vn.edu.tdc.selling_medicine_app.recycleview;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,33 +50,52 @@ public class Adapter_ItemInvoiceCustomerBought extends RecyclerView.Adapter<Item
     @NonNull
     @Override
     public ItemInvoiceCustomerBoughtViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(context).inflate(R.layout.custom_item_invoice, parent, false);
+        View itemView = LayoutInflater.from(context).inflate(R.layout.custom_item_customer_bought, parent, false);
         return new ItemInvoiceCustomerBoughtViewHolder(itemView);
     }
 
+
+
     @Override
     public void onBindViewHolder(@NonNull ItemInvoiceCustomerBoughtViewHolder holder, int position) {
-        MyBill invoice = invoiceList.get(position);
+        if (invoiceList != null && !invoiceList.isEmpty()) {
+            MyBill invoice = invoiceList.get(position);
 
-        holder.customer_name.setText("");
-        holder.customer_mobile.setText("");
-        holder.total_cash.setText("");
-        holder.dateCreated.setText("");
+            holder.customer_mobile.setText(invoice.getCustomerMobileNum());
+            holder.customer_name.setText(invoice.getCustomerName());
+            holder.total_cash.setText(FormatNumber.formatNumber(invoice.getTotalCash()) + " VND");
+            holder.dateCreated.setText(invoice.getDateCreated());
+            holder.itemView.setBackgroundResource(R.drawable.bg_item1);
 
-        holder.customer_mobile.setText(invoice.getCustomerMobileNum());
-        holder.customer_name.setText(invoice.getCustomerName());
-        holder.total_cash.setText(FormatNumber.formatNumber(invoice.getTotalCash()) + " VND");
-        holder.dateCreated.setText(invoice.getDateCreated());
+            String imageUrl = invoice.getImageInvoice();
 
-        holder.itemView.setBackgroundResource(R.drawable.bg_item1);
-        holder.linear_item_invoice.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, DetailHistorySalesActivity.class);
-                intent.putExtra("invoiceInfo", invoice);
-                context.startActivity(intent);
+            // Kiểm tra ImageView và URL
+            if (holder.ivBillCustomerBought != null) {
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Glide.with(context)
+                            .load(imageUrl)
+                            .apply(new RequestOptions()
+                                    .placeholder(R.drawable.loading)
+                                    .error(R.drawable.loadingerror))
+                            .into(holder.ivBillCustomerBought);
+                } else {
+                    holder.ivBillCustomerBought.setImageResource(R.drawable.loading);
+                }
+            } else {
+                Log.e("Adapter_ItemInvoice", "ImageView is null!");
             }
-        });
+
+            // Đảm bảo rằng itemView đã được khởi tạo
+            if (holder.itemView != null) {
+                holder.linear_item_invoice.setOnClickListener(v -> {
+                    Intent intent = new Intent(context, DetailHistorySalesActivity.class);
+                    intent.putExtra("invoiceInfo", invoice);
+                    context.startActivity(intent);
+                });
+            } else {
+                Log.e("Adapter_ItemInvoice", "itemView is null!");
+            }
+        }
     }
     public void deleteAInvoiceOfCustomer(int position) {
         if (invoiceList.size() > 0) {

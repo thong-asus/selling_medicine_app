@@ -14,7 +14,7 @@
         android:layout_width="140dp"
         android:layout_height="70dp"
         android:background="@color/loading"
-        android:id="@+id/ivMedicine"
+        android:id="@+id/ivMedicineInvoiceItem"
         android:layout_marginRight="10dp"/>
     <LinearLayout
         android:layout_width="wrap_content"

@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -31,8 +33,8 @@ public class Adapter_ItemRecentInvoiceHome extends RecyclerView.Adapter<IntemRec
 
     private Context context;
     private List<MyBill> invoiceList;
-    private DatabaseReference invoicesRef; // Tham chiếu đến node "Invoices" trong Firebase
-    private DatabaseReference customersRef; // Tham chiếu đến node "Customers" trong Firebase
+    private DatabaseReference invoicesRef;
+    private DatabaseReference customersRef;
     private User user = new User();
     private List<MyBill> invoices;
 
@@ -71,7 +73,6 @@ public class Adapter_ItemRecentInvoiceHome extends RecyclerView.Adapter<IntemRec
         holder.total_cash.setText("");
         holder.dateCreated.setText("");
 
-        // Set customer information from MyBill object
         holder.customer_mobile.setText(invoice.getCustomerMobileNum());
         holder.customer_name.setText(invoice.getCustomerName());
         holder.total_cash.setText(FormatNumber.formatNumber(invoice.getTotalCash()) + " VND");
@@ -79,6 +80,18 @@ public class Adapter_ItemRecentInvoiceHome extends RecyclerView.Adapter<IntemRec
 
         holder.itemView.setBackgroundResource(R.drawable.bg_item1);
 
+
+        //////////////////tải hình ảnh
+        String imageUrl = invoice.getImageInvoice();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(imageUrl)
+                    .apply(new RequestOptions().placeholder(R.drawable.loading)
+                            .error(R.drawable.loadingerror))
+                    .into(holder.ivRecentHome);
+        } else {
+            holder.ivRecentHome.setImageResource(R.drawable.loading);
+        }
 //        StringBuilder itemsText = new StringBuilder();
 //        for (MyBill.Item item : invoice.getItems()) {
 //            itemsText.append(item.getDrugName()).append(": ").append(item.getQtyDrug()).append("\n");

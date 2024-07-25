@@ -146,6 +146,10 @@ public class DetailCustomerActivity extends AppCompatActivity {
                         invoice.setChangeOfCustomer(getIntegerValue(invoiceSnapshot.child("changeOfCustomer")));
                         invoice.setTotalQty(getIntegerValue(invoiceSnapshot.child("totalQty")));
 
+                        ///////////tải hình ảnh
+                        String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
+                        invoice.setImageInvoice(imageUrl);
+
                         List<MyBill.Item> items = new ArrayList<>();
                         for (DataSnapshot itemSnapshot : invoiceSnapshot.child("items").getChildren()) {
                             MyBill.Item item = new MyBill.Item();

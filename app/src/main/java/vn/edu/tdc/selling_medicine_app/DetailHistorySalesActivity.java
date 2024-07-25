@@ -9,11 +9,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,10 +62,12 @@ public class DetailHistorySalesActivity extends AppCompatActivity {
         context = this;
         user = ReceiveUserInfo.getUserInfo(context);
 
-        /////////////////////////////////////////////////////////
         setControl();
         setEvent();
-        /////////////////////////LẤY THÔNG TIN CHI TIẾT HÓA ĐƠN////////////////////////////////
+        loadInvoiceDetails();
+    }
+
+    private void loadInvoiceDetails() {
         itemsList = new ArrayList<>();
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("invoiceInfo")) {
@@ -82,15 +87,26 @@ public class DetailHistorySalesActivity extends AppCompatActivity {
                 totalQtyDrug.setText(FormatNumber.formatNumber(invoice.getTotalQty()));
                 customerPaid.setText(FormatNumber.formatNumber(invoice.getCustomerPaid()) + " VND");
                 changeOfCustomer.setText(FormatNumber.formatNumber(invoice.getChangeOfCustomer()) + " VND");
+
+                //////////////////tải hình ảnh
+                String imageUrl = invoice.getImageInvoice();
+                if (imageUrl != null && !imageUrl.isEmpty()) {
+                    Glide.with(context)
+                            .load(imageUrl)
+                            .apply(new RequestOptions().placeholder(R.drawable.loading)
+                                    .error(R.drawable.loadingerror))
+                            .into(ivMedicineDetail);
+                } else {
+                    ivMedicineDetail.setImageResource(R.drawable.loading);
+                }
+
+
+            } else {
+                Log.e("DetailHistorySalesActivity", "Invoice object is null");
             }
+        } else {
+            Log.e("DetailHistorySalesActivity", "Intent does not contain invoiceInfo");
         }
-
-
-    }
-
-    private void setEvent() {
-        setSupportActionBar(toolbarInvoiceDetail);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
 
@@ -108,15 +124,16 @@ public class DetailHistorySalesActivity extends AppCompatActivity {
         rec_itemInvoiceDetail = findViewById(R.id.rec_itemInvoiceDetail);
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        return super.onPrepareOptionsMenu(menu);
+    private void setEvent() {
+        setSupportActionBar(toolbarInvoiceDetail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

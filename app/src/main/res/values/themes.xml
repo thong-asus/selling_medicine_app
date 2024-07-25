@@ -80,7 +80,7 @@
     <style name="prop_Button" parent="Base.Theme.Selling_medicine_app">
         <item name="android:textSize">20dp</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textStyle">bold</item>
+<!--        <item name="android:textStyle">bold</item>-->
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:layout_height">50dp</item>

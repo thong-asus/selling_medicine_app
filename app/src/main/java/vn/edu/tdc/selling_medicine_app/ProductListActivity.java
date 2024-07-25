@@ -4,9 +4,12 @@ import static android.content.ContentValues.TAG;
 import static android.view.View.VISIBLE;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,7 +17,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -32,6 +40,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -42,7 +51,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -79,7 +92,15 @@ public class ProductListActivity extends AppCompatActivity {
     private Adapter_ItemProduct itemProductAdapter;
     private ReloadSound reloadSound;
 
-    private  User user = new User();
+    private User user = new User();
+    /////////////////////////////////////////////
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private static final int CAMERA_REQUEST_CODE = 2;
+    private static final int REQUEST_CAMERA_PERMISSION = 100;
+    private ImageView ivMedicine;
+    private Uri imageUri = null;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,8 +114,6 @@ public class ProductListActivity extends AppCompatActivity {
         setEvent();
         getAllProduct();
         deleteAProduct();
-
-
     }
 
     private void showFilterDialog() {
@@ -144,6 +163,7 @@ public class ProductListActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
     private void handleFilterSelection(String nameOption, String dateOption, String expiryOption, String qtySellingOption) {
         List<Product> filteredProducts = new ArrayList<>(originalProductList);
 
@@ -209,16 +229,16 @@ public class ProductListActivity extends AppCompatActivity {
         if (!qtySellingOption.equals("Không chọn")) {
             filterByQtySelling(filteredProducts, qtySellingOption);
         }
-        if(!filteredProducts.isEmpty()){
+        if (!filteredProducts.isEmpty()) {
             itemProductAdapter.updateData(filteredProducts);
         } else {
-            CustomToast.showToastFailed(context,"Không tìm thấy sản phẩm nào");
+            CustomToast.showToastFailed(context, "Không tìm thấy sản phẩm nào");
         }
     }
 
     private void filterByDateRange(List<Product> products, String dateRangeType) {
         List<Product> filteredList = new ArrayList<>();
-        String currentDate = GetCurrentDate.getCurrentDate();
+        String currentDate = GetCurrentDate.getCurrentDateTime();
         String[] parts = currentDate.split(" ")[0].split("/");
 
         int currentDay = Integer.parseInt(parts[0]);
@@ -452,7 +472,7 @@ public class ProductListActivity extends AppCompatActivity {
     }
 
     private void getAllProduct() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/"+user.getMobileNumber());
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/" + user.getMobileNumber());
 
         Query query = databaseReference.orderByChild("dateCreated");
 
@@ -478,23 +498,23 @@ public class ProductListActivity extends AppCompatActivity {
                     noDataAvailable.setVisibility(VISIBLE);
                 } else {
                     noDataAvailable.setVisibility(View.GONE);
-                Collections.sort(productList, new Comparator<Product>() {
-                    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                    Collections.sort(productList, new Comparator<Product>() {
+                        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-                    @Override
-                    public int compare(Product p1, Product p2) {
-                        try {
-                            Date date1 = dateFormat.parse(p1.getDateCreated());
-                            Date date2 = dateFormat.parse(p2.getDateCreated());
-                            // Sắp xếp giảm dần theo ngày
-                            return date2.compareTo(date1);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                            return 0;
+                        @Override
+                        public int compare(Product p1, Product p2) {
+                            try {
+                                Date date1 = dateFormat.parse(p1.getDateCreated());
+                                Date date2 = dateFormat.parse(p2.getDateCreated());
+                                // Sắp xếp giảm dần theo ngày
+                                return date2.compareTo(date1);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                                return 0;
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
                 itemProductAdapter.notifyDataSetChanged();
             }
 
@@ -505,13 +525,13 @@ public class ProductListActivity extends AppCompatActivity {
         });
     }
 
-
     private void showAddProductDialog() {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.custom_dialog_add_product, null);
         dialogBuilder.setView(dialogView);
 
+        // Khởi tạo ImageView và các EditText từ dialogView
         ImageView ivAddMedicine = dialogView.findViewById(R.id.ivAddMedicine);
         EditText drugName = dialogView.findViewById(R.id.drugName);
         EditText price = dialogView.findViewById(R.id.price);
@@ -523,7 +543,8 @@ public class ProductListActivity extends AppCompatActivity {
         EditText expiryDate = dialogView.findViewById(R.id.expiryDate);
         EditText qtyInventory = dialogView.findViewById(R.id.qtySelling);
 
-        // Set EditorActionListeners for each EditText
+        ivAddMedicine.setOnClickListener(v -> showImagePickDialog());
+
         setEditorActionListener(drugName, price, "Vui lòng nhập tên sản phẩm");
         setEditorActionListener(price, form, "Vui lòng nhập giá");
         setEditorActionListener(form, strength, "Vui lòng nhập dạng thuốc");
@@ -531,14 +552,12 @@ public class ProductListActivity extends AppCompatActivity {
         setEditorActionListener(indications, dosage, "Vui lòng nhập chỉ định");
         setEditorActionListener(dosage, sideEffects, "Vui lòng nhập liều dùng");
         setEditorActionListener(sideEffects, expiryDate, "Vui lòng nhập tác dụng phụ");
-        setEditorActionListener(expiryDate, qtyInventory, "Vui lòng nhập ngày hết hạn");
 
         qtyInventory.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 if (qtyInventory.getText().toString().isEmpty()) {
-                    qtyInventory.setError("Vui lòng nhập số lượng tồn kho");
+                    qtyInventory.setError("Vui lòng nhập số lượng đang bán");
                     qtyInventory.requestFocus();
-
                 } else {
                     hideKeyboard(qtyInventory);
                 }
@@ -548,48 +567,161 @@ public class ProductListActivity extends AppCompatActivity {
         });
 
         dialogBuilder.setTitle("Thêm sản phẩm");
-        dialogBuilder.setPositiveButton("Thêm", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String nameDrug = drugName.getText().toString().trim();
-                String priceDrug = price.getText().toString().trim();
-                String formDrug = form.getText().toString().trim();
-                String strengthDrug = strength.getText().toString().trim();
-                String indicationsDrug = indications.getText().toString().trim();
-                String dosageDrug = dosage.getText().toString().trim();
-                String sideEffectsDrug = sideEffects.getText().toString().trim();
-                String expiryDateDrug = expiryDate.getText().toString().trim();
-                String qtyInventoryDrug = qtyInventory.getText().toString().trim();
+        dialogBuilder.setPositiveButton("Thêm", (dialog, whichButton) -> {
+            String nameDrug = drugName.getText().toString().trim();
+            String priceDrug = price.getText().toString().trim();
+            String formDrug = form.getText().toString().trim();
+            String strengthDrug = strength.getText().toString().trim();
+            String indicationsDrug = indications.getText().toString().trim();
+            String dosageDrug = dosage.getText().toString().trim();
+            String sideEffectsDrug = sideEffects.getText().toString().trim();
+            String expiryDateDrug = expiryDate.getText().toString().trim();
+            String qtyInventoryDrug = qtyInventory.getText().toString().trim();
 
-                // Lấy đường dẫn hình ảnh từ Tag của ImageView
-                String imageDrugUrl = ivAddMedicine.getTag() != null ? ivAddMedicine.getTag().toString() : "";
+            String imageDrugUrl = ivAddMedicine.getTag() != null ? ivAddMedicine.getTag().toString() : "";
 
-                if (nameDrug.isEmpty() || priceDrug.isEmpty() || formDrug.isEmpty() || strengthDrug.isEmpty() || indicationsDrug.isEmpty()
-                        || dosageDrug.isEmpty() || sideEffectsDrug.isEmpty() || expiryDateDrug.isEmpty() || qtyInventoryDrug.isEmpty()) {
-                    CustomToast.showToastFailed(context,"Vui lòng nhập đầy đủ thông tin sản phẩm");
-                } else {
-                    if (imageDrugUrl.isEmpty()) {
-                        imageDrugUrl = "https://example.com/default_image.jpg";
-                    }
-
-                    String dateCreated = GetCurrentDate.getCurrentDateTime();
-
-                    addNewProduct(imageDrugUrl, nameDrug, formDrug, strengthDrug,
-                            indicationsDrug, dosageDrug, sideEffectsDrug, expiryDateDrug,
-                            Integer.parseInt(qtyInventoryDrug), Integer.parseInt(priceDrug), dateCreated);
-
-                    dialog.dismiss();
-                    CustomToast.showToastSuccessful(context,"Thêm sản phẩm thành công");
+            if (nameDrug.isEmpty() || priceDrug.isEmpty() || formDrug.isEmpty() || strengthDrug.isEmpty() || indicationsDrug.isEmpty()
+                    || dosageDrug.isEmpty() || sideEffectsDrug.isEmpty() || expiryDateDrug.isEmpty() || qtyInventoryDrug.isEmpty()) {
+                CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin sản phẩm");
+            } else {
+                if (imageDrugUrl.isEmpty()) {
+                    imageDrugUrl = "https://example.com/default_image.jpg";
                 }
-            }
-        });
-        dialogBuilder.setNegativeButton("Hủy", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
+
+                String dateCreated = GetCurrentDate.getCurrentDateTime();
+                String drudID = FirebaseDatabase.getInstance().getReference("Drugs").push().getKey();
+
+                if (imageUri != null) {
+                    uploadImageToFirebase(imageUri, nameDrug, formDrug, strengthDrug, indicationsDrug, dosageDrug, sideEffectsDrug, expiryDateDrug, qtyInventoryDrug, priceDrug, dateCreated);
+                } else {
+                    addNewProduct(drudID, imageDrugUrl, nameDrug, formDrug, strengthDrug, indicationsDrug, dosageDrug, sideEffectsDrug, expiryDateDrug, Integer.parseInt(qtyInventoryDrug), Integer.parseInt(priceDrug), dateCreated);
+                }
+
                 dialog.dismiss();
             }
         });
+
+        dialogBuilder.setNegativeButton("Hủy", (dialog, whichButton) -> dialog.dismiss());
+
         addProductDialog = dialogBuilder.create();
         addProductDialog.show();
     }
+
+    private void showImagePickDialog() {
+        String[] options = {"Chụp ảnh", "Chọn từ thư viện"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Chọn ảnh từ");
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                    openCamera();
+                } else if (which == 1) {
+                    openFileChooser();
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        } else {
+            // Nếu đã có quyền, mở camera
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
+            } else {
+                CustomToast.showToastFailed(context, "Không thể mở camera");
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+            } else {
+                CustomToast.showToastFailed(context, "Quyền truy cập camera bị từ chối");
+            }
+        }
+    }
+
+
+    private void openFileChooser() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK && data != null) {
+            if (requestCode == CAMERA_REQUEST_CODE) {
+                Bundle extras = data.getExtras();
+                if (extras != null) {
+                    Bitmap imageBitmap = (Bitmap) extras.get("data");
+                    if (imageBitmap != null) {
+                        imageUri = getImageUri(this, imageBitmap);
+                        ImageView ivAddMedicine = addProductDialog.findViewById(R.id.ivAddMedicine);
+                        if (ivAddMedicine != null) {
+                            ivAddMedicine.setImageBitmap(imageBitmap);
+                            ivAddMedicine.setTag(imageUri.toString());
+                        }
+                    }
+                }
+            } else if (requestCode == PICK_IMAGE_REQUEST) {
+                imageUri = data.getData();
+                if (imageUri != null) {
+                    ImageView ivAddMedicine = addProductDialog.findViewById(R.id.ivAddMedicine);
+                    if (ivAddMedicine != null) {
+                        ivAddMedicine.setImageURI(imageUri);
+                        ivAddMedicine.setTag(imageUri.toString());
+                    }
+                }
+            }
+        }
+    }
+
+    private Uri getImageUri(Context context, Bitmap bitmap) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), bitmap, "Title", null);
+        return Uri.parse(path);
+    }
+
+    private void uploadImageToFirebase(Uri imageUri, String nameDrug, String formDrug, String strengthDrug, String indicationsDrug, String dosageDrug, String sideEffectsDrug, String expiryDateDrug, String qtyInventoryDrug, String priceDrug, String dateCreated) {
+        if (imageUri != null) {
+            // Tạo ID tự động cho sản phẩm mới
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs");
+            String idDrug = databaseReference.push().getKey();
+            if (idDrug == null) {
+                CustomToast.showToastFailed(context, "Lỗi tạo ID sản phẩm");
+                return;
+            }
+
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("Drugs/" + user.getMobileNumber() + "/" + idDrug);
+            StorageReference fileReference = storageReference.child(System.currentTimeMillis() + ".jpg");
+
+            fileReference.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot -> fileReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String imageUrl = uri.toString();
+                        // Chuyển đổi dữ liệu và thêm sản phẩm vào Firebase Database
+                        addNewProduct(idDrug, imageUrl, nameDrug, formDrug, strengthDrug, indicationsDrug, dosageDrug, sideEffectsDrug, expiryDateDrug, Integer.parseInt(qtyInventoryDrug), Integer.parseInt(priceDrug), dateCreated);
+                    }))
+                    .addOnFailureListener(e -> CustomToast.showToastFailed(context, "Upload thất bại: " + e.getMessage()));
+        } else {
+            CustomToast.showToastFailed(context, "Không có hình ảnh để tải lên");
+        }
+    }
+
 
     private void setEditorActionListener(EditText currentEditText, EditText nextEditText, String errorMessage) {
         currentEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -607,38 +739,26 @@ public class ProductListActivity extends AppCompatActivity {
         });
     }
 
+    private void addNewProduct(String idDrug, String imageDrug, String drugName, String form, String strength, String indications, String dosage, String sideEffects, String expiryDate, int qtyInventory, int price, String dateCreated) {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/" + user.getMobileNumber());
 
-    private void addNewProduct(String imageDrug, String drugName, String form,
-                               String strength, String indications, String dosage, String sideEffects,
-                               String expiryDate, int qtyInventory, int price, String dateCreated) {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/"+user.getMobileNumber());
-
-        String idDrug = databaseReference.push().getKey();
-
-        if (imageDrug == null || imageDrug.isEmpty()) {
-            imageDrug = "https://example.com/default_image.jpg";
+        if (idDrug.isEmpty()) {
+            idDrug = databaseReference.push().getKey();
         }
 
-        Product newProduct = new Product(idDrug, imageDrug, drugName, form, strength,
-                indications, dosage, sideEffects, expiryDate, qtyInventory, price, dateCreated);
+        Product newProduct = new Product(idDrug, imageDrug, drugName, form, strength, indications, dosage, sideEffects, expiryDate, qtyInventory, price, dateCreated);
 
         databaseReference.child(idDrug).setValue(newProduct)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Sản phẩm đã được thêm vào Firebase thành công");
-                        // Cập nhật danh sách sản phẩm sau khi thêm thành công (nếu cần)
-                        getAllProduct();
-                    }
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Sản phẩm đã được thêm vào Firebase thành công");
+                    CustomToast.showToastSuccessful(context, "Thêm sản phẩm thành công");
+                    getAllProduct();
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Lỗi khi thêm sản phẩm vào Firebase", e);
-                    }
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Lỗi khi thêm sản phẩm vào Firebase", e);
+                    //CustomToast.showToastFailed(context, "Thêm sản phẩm thất bại: " + e.getMessage());
                 });
     }
-
 
     private void hideKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -673,6 +793,7 @@ public class ProductListActivity extends AppCompatActivity {
         recycleview_productList = findViewById(R.id.recycleview_productList);
         noDataAvailable = findViewById(R.id.noDataAvailable);
     }
+
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -680,6 +801,7 @@ public class ProductListActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -687,6 +809,7 @@ public class ProductListActivity extends AppCompatActivity {
             reloadSound.release();
         }
     }
+
     @Override
     protected void onResume() {
         super.onResume();

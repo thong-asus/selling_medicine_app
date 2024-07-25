@@ -4,13 +4,20 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -33,7 +40,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +81,11 @@ public class PrePaymentActivity extends AppCompatActivity {
     //////////////////////
     private List<String> selectedDrugIds = new ArrayList<>();
     private Map<String, String> drugIdMap = new HashMap<>();
+
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private static final int CAMERA_REQUEST_CODE = 2;
+    private static final int REQUEST_CAMERA_PERMISSION = 100;
+    private Uri imageUri = null;
 
 
     @Override
@@ -157,7 +174,7 @@ public class PrePaymentActivity extends AppCompatActivity {
         btnAddMedicine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openAddMedicineDialog();
+                openAddMedicineToInvoiceDialog();
             }
         });
         nextPayment.setOnClickListener(new View.OnClickListener() {
@@ -185,6 +202,11 @@ public class PrePaymentActivity extends AppCompatActivity {
         int customerPaid = Integer.parseInt(customerPaidString);
         int changeOfCustomer = customerPaid - totalCash;
 
+        if (imageUri == null) {
+            CustomToast.showToastFailed(context, "Vui lòng chọn hình ảnh");
+            return;
+        }
+
         MyBill myBill = new MyBill();
         myBill.setUserMobileNum(user.getMobileNumber());
         myBill.setCustomerMobileNum(customerMobileNum);
@@ -210,6 +232,7 @@ public class PrePaymentActivity extends AppCompatActivity {
         intent.putExtra("myBill", myBill);
         intent.putExtra("customerName", customerName);
         intent.putExtra("changeOfCustomer", changeOfCustomer);
+        intent.putExtra("IMAGE_URI", imageUri.toString());
         intent.putStringArrayListExtra("selectedDrugIds", new ArrayList<>(selectedDrugIds));
         startActivity(intent);
     }
@@ -268,7 +291,7 @@ public class PrePaymentActivity extends AppCompatActivity {
         });
     }
 
-    public void openAddMedicineDialog() {
+    public void openAddMedicineToInvoiceDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.custom_dialog_add_medicine_to_invoice, null);
@@ -321,6 +344,108 @@ public class PrePaymentActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    ////////////////////////////////UPLOAD IMAGE
+    private void showImagePickDialog() {
+        String[] options = {"Chụp ảnh", "Chọn từ thư viện"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Chọn ảnh từ");
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                    openCamera();
+                } else if (which == 1) {
+                    openFileChooser();
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        } else {
+            // Nếu đã có quyền, mở camera
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(cameraIntent, CAMERA_REQUEST_CODE);
+            } else {
+                CustomToast.showToastFailed(context, "Không thể mở camera");
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+            } else {
+                CustomToast.showToastFailed(context, "Quyền truy cập camera bị từ chối");
+            }
+        }
+    }
+
+
+    private void openFileChooser() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == CAMERA_REQUEST_CODE) {
+                Bundle extras = data.getExtras();
+                if (extras != null) {
+                    Bitmap imageBitmap = (Bitmap) extras.get("data");
+                    if (imageBitmap != null) {
+                        imageUri = getImageUri(this, imageBitmap);
+                        if (imageUri != null) {
+                            ivMedicinePrePayment.setImageBitmap(imageBitmap);
+                            ivMedicinePrePayment.setTag(imageUri.toString());
+                        } else {
+                            // Xử lý lỗi khi không thể tạo Uri từ hình ảnh
+                            //CustomToast.showToastFailed(context, "Không thể lưu hình ảnh.");
+                            Log.d("Fail","Không thể lưu hình ảnh");
+                        }
+                    }
+                }
+            } else if (requestCode == PICK_IMAGE_REQUEST) {
+                imageUri = data.getData();
+                if (imageUri != null) {
+                    ivMedicinePrePayment.setImageURI(imageUri);
+                    ivMedicinePrePayment.setTag(imageUri.toString());
+                } else {
+                    // Xử lý lỗi khi không thể nhận hình ảnh từ thư viện
+                    Log.d("Fail","Không thể lấy hình ảnh từ thư viện.");
+                    //CustomToast.showToastFailed(context, "Không thể lấy hình ảnh từ thư viện.");
+                }
+            }
+        }
+    }
+
+    private Uri getImageUri(Context context, Bitmap bitmap) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, "image_" + System.currentTimeMillis() + ".jpg");
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        Uri uri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        try (OutputStream out = context.getContentResolver().openOutputStream(uri)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            return uri;
+        } catch (IOException e) {
+            Log.e("getImageUri", "Lỗi khi lưu hình ảnh: " + e.getMessage());
+            return null;
+        }
+    }
 
     private void checkAndSetCustomerInfo(String customerMobileNum) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Customers/" + user.getMobileNumber() + "/" + customerMobileNum);
@@ -392,6 +517,9 @@ public class PrePaymentActivity extends AppCompatActivity {
         edtCustomerPaid = findViewById(R.id.edtCustomerPaid);
         edtTotalCash = findViewById(R.id.edtTotalCash);
 
+        ivMedicinePrePayment.setOnClickListener(v -> {
+            showImagePickDialog();
+        });
         viewPrePayment.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

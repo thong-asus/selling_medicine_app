@@ -6,64 +6,77 @@
     android:layout_marginHorizontal="5dp"
     android:padding="5dp"
     android:orientation="horizontal"
-    android:id="@+id/linear_item_product">
-
+    android:id="@+id/linear_item_invoice">
     <ImageView
-        android:id="@+id/ivItemProduct"
+        android:layout_gravity="center"
         android:layout_width="140dp"
         android:layout_height="70dp"
-        android:layout_gravity="center"
-        android:layout_marginRight="20dp"
-        android:background="@color/loading" />
-
+        android:background="@color/loading"
+        android:id="@+id/ivBillCustomerBought"
+        android:layout_marginRight="10dp"/>
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:textColor="#000"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Tên thuốc: "/>
             <TextView
                 android:textColor="#000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/drugName"/>
+                android:text="Khách hàng: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/customer_name"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:textColor="#000"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Chỉ định: "/>
             <TextView
                 android:textColor="#000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/indications" />
+                android:text="Số điện thoại: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/customer_mobile" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:textColor="#000"
-                android:layout_width="100dp"
-                android:layout_height="wrap_content"
-                android:text="Ngày hết hạn: "/>
             <TextView
                 android:textColor="#000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/expiryDate" />
+                android:text="Tổng tiền: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/total_cash" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ngày mua: "/>
+            <TextView
+                android:textColor="#000"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dateCreated" />
         </LinearLayout>
     </LinearLayout>
 

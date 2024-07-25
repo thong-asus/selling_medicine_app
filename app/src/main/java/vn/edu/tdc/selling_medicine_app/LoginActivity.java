@@ -1,5 +1,7 @@
 package vn.edu.tdc.selling_medicine_app;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +18,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -23,11 +28,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.FcmTokenManager;
 import vn.edu.tdc.selling_medicine_app.feature.HashUtil;
+import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.feature.ShowMessage;
+import vn.edu.tdc.selling_medicine_app.fragment.HomeFragment;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class LoginActivity extends AppCompatActivity {
@@ -90,7 +99,30 @@ public class LoginActivity extends AppCompatActivity {
                                 editor.putString("informationUser", jsonUser);
                                 editor.putString("mobileNumber", inputMobileNumber);
                                 editor.apply();
-                                Intent intent = new Intent(context, HomeActivity.class);
+
+
+                                ReceiveUserInfo.saveUserInfo(context,user);
+
+                                FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        String newFcmToken = task.getResult();
+                                        if (newFcmToken != null) {
+
+                                            FcmTokenManager.saveFcmToken(context, newFcmToken);
+
+                                            FcmTokenManager.saveTokenOnFireBase(context, user.getMobileNumber(), newFcmToken);
+                                            SharedPreferences sharedPreferencesFCM = context.getSharedPreferences("fcmTokenPrefs", Context.MODE_PRIVATE);
+                                            SharedPreferences.Editor editorFCM = sharedPreferencesFCM.edit();
+                                            editorFCM.putString("fcmToken", newFcmToken);
+                                            editorFCM.apply();
+                                        }
+                                    } else {
+                                        Log.w(TAG, "Fetching FCM token failed", task.getException());
+                                    }
+                                });
+
+
+                                Intent intent = new Intent(context, MainActivity.class);
                                 startActivity(intent);
                                 finish();
                             } else {

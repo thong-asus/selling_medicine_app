@@ -36,7 +36,7 @@
     </string-array>
     <string-array name="sort_by_product_expiry_date">
         <item>Không chọn</item>
-<!--        <item>&lt;1 Tuần</item>-->
+        <!--        <item>&lt;1 Tuần</item>-->
         <item>&lt;1 Tháng</item>
         <item>&lt;3 Tháng</item>
         <item>&lt;6 Tháng</item>
@@ -44,11 +44,13 @@
         <item>&gt;1 Năm</item>
     </string-array>
     <string-array name="sort_by_product_selling">
-    <item>Không chọn</item>
-    <item>Cao nhất</item>
-    <item>Thấp nhất</item>
-    <item>&lt;5</item>
-    <item>5-10</item>
-    <item>&gt;10</item>
+        <item>Không chọn</item>
+        <item>Cao nhất</item>
+        <item>Thấp nhất</item>
+        <item>&lt;5</item>
+        <item>5-10</item>
+        <item>&gt;10</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

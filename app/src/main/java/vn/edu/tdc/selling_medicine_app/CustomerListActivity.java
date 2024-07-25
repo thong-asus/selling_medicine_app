@@ -258,7 +258,7 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void filterByDateRange(List<Customer> customers, String dateRangeType) {
         List<Customer> filteredList = new ArrayList<>();
-        String currentDate = GetCurrentDate.getCurrentDate();
+        String currentDate = GetCurrentDate.getCurrentDateTime();
         String[] parts = currentDate.split(" ")[0].split("/");
 
         int currentDay = Integer.parseInt(parts[0]);

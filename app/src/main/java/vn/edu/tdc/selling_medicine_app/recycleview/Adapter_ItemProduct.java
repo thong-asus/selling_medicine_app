@@ -3,6 +3,7 @@ package vn.edu.tdc.selling_medicine_app.recycleview;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
@@ -27,7 +30,7 @@ public class Adapter_ItemProduct extends RecyclerView.Adapter<ItemProductViewHol
     private List<Product> productList;
     private Context context;
     private RecyclerView recyclerView;
-    private  User user = new User();
+    private User user = new User();
 
     public Adapter_ItemProduct(List<Product> productList, Context context) {
         this.productList = productList;
@@ -58,6 +61,22 @@ public class Adapter_ItemProduct extends RecyclerView.Adapter<ItemProductViewHol
         holder.expiryDate.setText(product.getExpiryDate());
         holder.itemView.setBackgroundResource(R.drawable.bg_item1);
 
+
+        String imageUrl = product.getImageDrug();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(context)
+                    .load(imageUrl)
+                    .apply(new RequestOptions().placeholder(R.drawable.loading)
+                            .error(R.drawable.loadingerror))
+                    .into(holder.ivItemProduct);
+        } else {
+            holder.ivItemProduct.setImageResource(R.drawable.loading);
+        }
+        Log.d("Adapter_ItemProduct", "Image URL: " + imageUrl);
+
+
+        // holder.ivMedicine.setBackground();
+
 //        if (productList.isEmpty()) {
 //            holder.tvNoAvailableProduct.setVisibility(View.VISIBLE);
 //        } else {
@@ -78,36 +97,39 @@ public class Adapter_ItemProduct extends RecyclerView.Adapter<ItemProductViewHol
         });
     }
 
-public void deleteAProduct(int position) {
-    if (productList.size() > 0) {
-        Product product = productList.get(position);
+    public void getImageProduct(){
 
-        AlertDialog alertDialog = new AlertDialog.Builder(context)
-                .setTitle("Thông báo")
-                .setMessage("Bạn có chắc chắn muốn xóa sản phẩm này chứ?")
-                .setPositiveButton("Có", (dialog, which) -> {
-                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/"+user.getMobileNumber());
-                    databaseReference.child(product.getIdDrug()).removeValue()
-                            .addOnSuccessListener(aVoid -> {
-                                productList.remove(position);
-                                notifyItemRemoved(position);
-                                notifyDataSetChanged();
-                                CustomToast.showToastSuccessful(context,"Xóa sản phẩm thành công");
-                            })
-                            .addOnFailureListener(e -> {
-                                CustomToast.showToastFailed(context,"Xóa sản phẩm thất bại");
-                                //Toast.makeText(context, "Xóa sản phẩm thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            });
-                })
-                .setNegativeButton("Không", (dialog, which) -> {
-                    notifyDataSetChanged();
-                })
-                .setIcon(R.drawable.ic_question)
-                .create();
-        alertDialog.setOnDismissListener(dialog -> resetSwipe(position));
-        alertDialog.show();
     }
-}
+    public void deleteAProduct(int position) {
+        if (productList.size() > 0) {
+            Product product = productList.get(position);
+
+            AlertDialog alertDialog = new AlertDialog.Builder(context)
+                    .setTitle("Thông báo")
+                    .setMessage("Bạn có chắc chắn muốn xóa sản phẩm này chứ?")
+                    .setPositiveButton("Có", (dialog, which) -> {
+                        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/" + user.getMobileNumber());
+                        databaseReference.child(product.getIdDrug()).removeValue()
+                                .addOnSuccessListener(aVoid -> {
+                                    productList.remove(position);
+                                    notifyItemRemoved(position);
+                                    notifyDataSetChanged();
+                                    CustomToast.showToastSuccessful(context, "Xóa sản phẩm thành công");
+                                })
+                                .addOnFailureListener(e -> {
+                                    CustomToast.showToastFailed(context, "Xóa sản phẩm thất bại");
+                                    //Toast.makeText(context, "Xóa sản phẩm thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .setNegativeButton("Không", (dialog, which) -> {
+                        notifyDataSetChanged();
+                    })
+                    .setIcon(R.drawable.ic_question)
+                    .create();
+            alertDialog.setOnDismissListener(dialog -> resetSwipe(position));
+            alertDialog.show();
+        }
+    }
 
     public void resetSwipe(int position) {
         if (recyclerView != null) {

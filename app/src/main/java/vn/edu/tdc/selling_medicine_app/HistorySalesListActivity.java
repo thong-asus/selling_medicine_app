@@ -257,7 +257,7 @@ public class HistorySalesListActivity extends AppCompatActivity {
 
     private void filterByDateRange(List<MyBill> invoices, String dateRangeType) {
         List<MyBill> filteredList = new ArrayList<>();
-        String currentDate = GetCurrentDate.getCurrentDate();
+        String currentDate = GetCurrentDate.getCurrentDateTime();
         String[] parts = currentDate.split(" ")[0].split("/");
 
         int currentDay = Integer.parseInt(parts[0]);
@@ -380,6 +380,10 @@ public class HistorySalesListActivity extends AppCompatActivity {
                             invoice.setChangeOfCustomer(invoiceSnapshot.child("changeOfCustomer").getValue(Integer.class));
                             invoice.setTotalQty(invoiceSnapshot.child("totalQty").getValue(Integer.class));
 
+                            ///tải hình ảnh
+                            String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
+                            invoice.setImageInvoice(imageUrl);
+                            /////////////////////////////////////////
                             List<MyBill.Item> items = new ArrayList<>();
                             for (DataSnapshot itemSnapshot : invoiceSnapshot.child("items").getChildren()) {
                                 MyBill.Item item = new MyBill.Item();

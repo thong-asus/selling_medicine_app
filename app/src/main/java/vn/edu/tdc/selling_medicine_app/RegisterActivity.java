@@ -211,6 +211,8 @@ public class RegisterActivity extends AppCompatActivity {
         String mobileNumberText = mobileNumber.getText().toString();
         String fullnameText = fullname.getText().toString();
         String passwordText = password.getText().toString();
+        String fcmTokenNull = "";
+
 
         String hashedPassword = HashUtil.hashPassword(passwordText);
 
@@ -218,6 +220,7 @@ public class RegisterActivity extends AppCompatActivity {
         user.setMobileNumber(mobileNumberText);
         user.setFullname(fullnameText);
         user.setPassword(hashedPassword);
+        user.setFcmToken(fcmTokenNull);
 
         databaseReference.child(mobileNumber.getText().toString()).setValue(user)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {

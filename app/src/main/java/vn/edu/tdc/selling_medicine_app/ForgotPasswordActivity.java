@@ -137,6 +137,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (mobileNumber.getText().toString().isEmpty()) {
                     mobileNumber.setError("Vui lòng nhập số điện thoại!");
+                    CustomToast.showToastFailed(context,"Vui lòng nhập số điện thoại!");
                 } else {
                     sentOTP();
                     CustomToast.showToastSuccessful(context, "Đã gửi mã OTP");

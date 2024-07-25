@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,9 +18,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -27,6 +30,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,16 +51,19 @@ public class PaymentActivity extends AppCompatActivity {
 
     private Toolbar toolbar_Payment;
     private Button btnSaveBill;
+    private ImageView ivMedicinePayment;
     private View viewPayment;
     private RecyclerView rec_itemPayment;
     private Adapter_ItemPayment adapterItemPayment;
     private List<MyBill.Item> itemList;
-    private TextView customerMobileNum, customerName, dateCreated, noted , totalQtyDrug, totalCash, customerPaid, changeOfCustomer;
+    private TextView customerMobileNum, customerName, dateCreated, noted, totalQtyDrug, totalCash, customerPaid, changeOfCustomer;
     //TextInputEditText edtTotalCash, edtCustomerPaid;
     private Context context;
     private User user = new User();
     private Customer customer;
     private String customerMobileNumber;
+    private String imageUriString;
+    private String invoiceID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +82,16 @@ public class PaymentActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent != null) {
             customerMobileNumber = intent.getStringExtra("customerMobileNum");
+            imageUriString = intent.getStringExtra("IMAGE_URI");
+
+            if (imageUriString != null) {
+                Uri imageUri = Uri.parse(imageUriString);
+                Glide.with(this)
+                        .load(imageUri)
+                        .placeholder(R.drawable.loading)
+                        .error(R.drawable.loadingerror)
+                        .into(ivMedicinePayment);
+            }
             //Log.d("PaymentActivity", "Received Customer Mobile Number: " + customerMobileNumber);
 
             // Lấy customerName từ Intent và hiển thị
@@ -119,12 +137,48 @@ public class PaymentActivity extends AppCompatActivity {
         btnSaveBill.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    saveBill();
+                if (imageUriString != null) {
+                    Uri imageUri = getImageUriFromString(imageUriString);
+                    if (invoiceID == null) {
+                        createInvoiceID();
+                    }
+                    uploadImageToFirebase(imageUri, invoiceID);
+                } else {
+                    CustomToast.showToastFailed(context, "Chưa chọn hình ảnh để tải lên");
+                }
             }
         });
+
+
     }
 
-    private void saveBill() {
+    private void createInvoiceID() {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Invoices/" + user.getMobileNumber() + "/" + customerMobileNumber);
+        invoiceID = databaseReference.push().getKey();
+    }
+
+    private Uri getImageUriFromString(String imageUriString) {
+        return Uri.parse(imageUriString);
+    }
+
+    private void uploadImageToFirebase(Uri imageUri, String invoiceID) {
+        if (imageUri != null && invoiceID != null) {
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("Invoices/" + user.getMobileNumber() + "/" + invoiceID);
+            StorageReference fileReference = storageReference.child(System.currentTimeMillis() + ".jpg");
+
+            fileReference.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot -> fileReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String imageUrl = uri.toString();
+                        // Gọi hàm lưu hóa đơn với URL hình ảnh
+                        saveBill(imageUrl);
+                    }))
+                    .addOnFailureListener(e -> CustomToast.showToastFailed(context, "Upload thất bại: " + e.getMessage()));
+        } else {
+            CustomToast.showToastFailed(context, "Không có hình ảnh để tải lên hoặc ID hóa đơn không hợp lệ");
+        }
+    }
+
+    private void saveBill(String imageUrl) {
         String userMobileNumber = user.getMobileNumber();
         Log.d("PaymentActivity", "User Mobile Number: " + userMobileNumber);
         Log.d("PaymentActivity", "Customer Mobile Number: " + customerMobileNumber);
@@ -139,7 +193,8 @@ public class PaymentActivity extends AppCompatActivity {
         String purchaseDate = GetCurrentDate.getCurrentDateTime();
         String note = noted.getText().toString().trim();
 
-        //Lấy dữ liệu từ các TextView và kiểm tra tính hợp lệ
+
+        // Lấy dữ liệu từ các TextView và kiểm tra tính hợp lệ
         String totalCashStr = totalCash.getText().toString().trim();
         String customerPayStr = customerPaid.getText().toString().trim();
         String changeOfCustomerStr = changeOfCustomer.getText().toString().trim();
@@ -170,6 +225,8 @@ public class PaymentActivity extends AppCompatActivity {
             myBill.setTotalCash(totalCash1);
             myBill.setCustomerPaid(customerPay1);
             myBill.setChangeOfCustomer(changeOfCustomer1);
+            myBill.setImageInvoice(imageUrl);
+
 
             int totalQuantity = 0;
             for (MyBill.Item item : itemList) {
@@ -198,7 +255,7 @@ public class PaymentActivity extends AppCompatActivity {
                                 }
                             }
                             CustomToast.showToastSuccessful(context, "Hóa đơn đã được lưu thành công");
-                            saveSomeInforInvoice(customerMobileNum.getText().toString(),invoiceID);
+                            saveSomeInforInvoice(customerMobileNumber, invoiceID);
                             updateCustomerStats(totalCashOne);
                             Intent intent = new Intent(PaymentActivity.this, PrePaymentActivity.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -213,9 +270,8 @@ public class PaymentActivity extends AppCompatActivity {
         }
     }
 
-
     private void saveSomeInforInvoice(String customerMobileNumber, String idInvoice) {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("InvoiceCustomer/" + "/" +user.getMobileNumber() + "/" + customerMobileNumber);
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("InvoiceCustomer/" + "/" + user.getMobileNumber() + "/" + customerMobileNumber);
         databaseReference.child(idInvoice).setValue(idInvoice)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
@@ -325,6 +381,7 @@ public class PaymentActivity extends AppCompatActivity {
 
     private void setControl() {
         rec_itemPayment = findViewById(R.id.rec_itemPayment);
+        ivMedicinePayment = findViewById(R.id.ivMedicinePayment);
         customerMobileNum = findViewById(R.id.customerMobileNum);
         customerName = findViewById(R.id.customerName);
         dateCreated = findViewById(R.id.dateCreated);

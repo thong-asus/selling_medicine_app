@@ -2,6 +2,7 @@ package vn.edu.tdc.selling_medicine_app.recycleview;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -61,29 +64,74 @@ public class Adapter_ItemInvoice extends RecyclerView.Adapter<ItemInvoiceViewHol
         if (invoiceList != null && !invoiceList.isEmpty()) {
             MyBill invoice = invoiceList.get(position);
 
-            holder.customer_name.setText("");
-            holder.customer_mobile.setText("");
-            holder.total_cash.setText("");
-            holder.dateCreated.setText("");
-
-
-            holder.customer_mobile.setText(invoice.getCustomerMobileNum());
             holder.customer_name.setText(invoice.getCustomerName());
+            holder.customer_mobile.setText(invoice.getCustomerMobileNum());
             holder.total_cash.setText(FormatNumber.formatNumber(invoice.getTotalCash()) + " VND");
             holder.dateCreated.setText(invoice.getDateCreated());
 
             holder.itemView.setBackgroundResource(R.drawable.bg_item1);
 
-            holder.linear_item_invoice.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(context, DetailHistorySalesActivity.class);
-                    intent.putExtra("invoiceInfo", invoice);
-                    context.startActivity(intent);
-                }
+            String imageUrl = invoice.getImageInvoice();
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                Glide.with(context)
+                        .load(imageUrl)
+                        .apply(new RequestOptions().placeholder(R.drawable.loading)
+                                .error(R.drawable.loadingerror))
+                        .into(holder.ivMedicineInvoiceItem);
+            } else {
+                holder.ivMedicineInvoiceItem.setImageResource(R.drawable.loading);
+            }
+
+            Log.d("Adapter_ItemInvoice", "Image URL: " + imageUrl);
+
+            holder.linear_item_invoice.setOnClickListener(v -> {
+                Intent intent = new Intent(context, DetailHistorySalesActivity.class);
+                intent.putExtra("invoiceInfo", invoice);
+                context.startActivity(intent);
             });
         }
     }
+
+//    @Override
+//    public void onBindViewHolder(@NonNull ItemInvoiceViewHolder holder, int position) {
+//        if (invoiceList != null && !invoiceList.isEmpty()) {
+//            MyBill invoice = invoiceList.get(position);
+//
+//            holder.customer_name.setText("");
+//            holder.customer_mobile.setText("");
+//            holder.total_cash.setText("");
+//            holder.dateCreated.setText("");
+//
+//
+//            holder.customer_mobile.setText(invoice.getCustomerMobileNum());
+//            holder.customer_name.setText(invoice.getCustomerName());
+//            holder.total_cash.setText(FormatNumber.formatNumber(invoice.getTotalCash()) + " VND");
+//            holder.dateCreated.setText(invoice.getDateCreated());
+//
+//            holder.itemView.setBackgroundResource(R.drawable.bg_item1);
+//
+//            String imageUrl = invoice.getImageInvoice();
+//            if (imageUrl != null && !imageUrl.isEmpty()) {
+//                Glide.with(context)
+//                        .load(imageUrl)
+//                        .apply(new RequestOptions().placeholder(R.drawable.loading)
+//                                .error(R.drawable.loadingerror))
+//                        .into(holder.ivMedicineInvoiceItem);
+//            } else {
+//                holder.ivMedicineInvoiceItem.setImageResource(R.drawable.loading);
+//            }
+//            Log.d("Adapter_ItemInvoice", "Image URL: " + imageUrl);
+//
+//            holder.linear_item_invoice.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Intent intent = new Intent(context, DetailHistorySalesActivity.class);
+//                    intent.putExtra("invoiceInfo", invoice);
+//                    context.startActivity(intent);
+//                }
+//            });
+//        }
+//    }
 
 
     public void deleteAInvoice(int position) {

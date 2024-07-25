@@ -11,12 +11,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import vn.edu.tdc.selling_medicine_app.R;
 
 public class ItemInvoiceCustomerBoughtViewHolder extends RecyclerView.ViewHolder {
-    ImageView ivMedicine;
+    ImageView ivBillCustomerBought;
     LinearLayout linear_item_invoice;
     TextView customer_name, customer_mobile, total_cash, dateCreated;
     public ItemInvoiceCustomerBoughtViewHolder(@NonNull View itemView) {
         super(itemView);
-        ivMedicine = itemView.findViewById(R.id.ivMedicine);
+
+        ivBillCustomerBought = itemView.findViewById(R.id.ivBillCustomerBought);
         linear_item_invoice = itemView.findViewById(R.id.linear_item_invoice);
         customer_name = itemView.findViewById(R.id.customer_name);
         customer_mobile = itemView.findViewById(R.id.customer_mobile);
