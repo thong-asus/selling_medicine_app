@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -31,14 +33,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.feature.ReloadSound;
 import vn.edu.tdc.selling_medicine_app.feature.SwipeToDelete;
@@ -63,6 +70,8 @@ public class HistorySalesListActivity extends AppCompatActivity {
     private ArrayList<MyBill> invoiceList = new ArrayList<>();
     private ArrayList<MyBill> originalInvoiceList = new ArrayList<>();
     private DatabaseReference databaseReference;
+    private NetworkChangeReceiver networkChangeReceiver;
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +79,31 @@ public class HistorySalesListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_history_sales_list);
 
         context = this;
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         user = ReceiveUserInfo.getUserInfo(context);
         reloadSound = new ReloadSound(this);
         setControl();
         setEvent();
         getAllInvoice();
         deleteAInvoice();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getAllInvoice();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(networkChangeReceiver);
     }
 
     private void setEvent() {
@@ -86,7 +114,6 @@ public class HistorySalesListActivity extends AppCompatActivity {
         adapterItemInvoice = new Adapter_ItemInvoice(invoiceList, this);
         recycleview_historySales.setAdapter(adapterItemInvoice);
         adapterItemInvoice.notifyDataSetChanged();
-
 
 
         swipeRefresh.setOnRefreshListener(() -> {
@@ -103,7 +130,8 @@ public class HistorySalesListActivity extends AppCompatActivity {
         });
         search_history_salesList.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -111,7 +139,8 @@ public class HistorySalesListActivity extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {}
+            public void afterTextChanged(Editable editable) {
+            }
         });
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -163,9 +192,15 @@ public class HistorySalesListActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
     private void handleFilterSelection(String nameOption, String dateOption, String totalCashOption) {
         List<MyBill> filteredInvoices = new ArrayList<>(originalInvoiceList);
 
+//        if (!filteredInvoices.isEmpty()) {
+//            adapterItemInvoice.updateData(filteredInvoices);
+//        } else {
+//            CustomToast.showToastFailed(context, "Không tìm thấy hóa đơn nào");
+//        }
         // Lọc theo tên khách hàng
         if (!nameOption.equals("Không chọn")) {
             if (nameOption.equals("Từ A-Z")) {
@@ -189,18 +224,26 @@ public class HistorySalesListActivity extends AppCompatActivity {
         if (!dateOption.equals("Không chọn")) {
             switch (dateOption) {
                 case "Mới nhất":
-                    Collections.sort(filteredInvoices, new Comparator<MyBill>() {
-                        @Override
-                        public int compare(MyBill i1, MyBill i2) {
-                            return i2.getDateCreated().compareTo(i1.getDateCreated());
+                    Collections.sort(filteredInvoices, (invoice1, invoice2) -> {
+                        try {
+                            Date date1 = sdf.parse(invoice1.getDateCreated());
+                            Date date2 = sdf.parse(invoice2.getDateCreated());
+                            return date2.compareTo(date1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
                 case "Cũ nhất":
-                    Collections.sort(filteredInvoices, new Comparator<MyBill>() {
-                        @Override
-                        public int compare(MyBill i1, MyBill i2) {
-                            return i1.getDateCreated().compareTo(i2.getDateCreated());
+                    Collections.sort(filteredInvoices, (invoice1, invoice2) -> {
+                        try {
+                            Date date1 = sdf.parse(invoice1.getDateCreated());
+                            Date date2 = sdf.parse(invoice2.getDateCreated());
+                            return date1.compareTo(date2);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
@@ -236,7 +279,7 @@ public class HistorySalesListActivity extends AppCompatActivity {
                     }
                 });
             } else if (totalCashOption.equals("<5000")) {
-                filteredInvoices = filterByTotalCash(filteredInvoices, 0, 5000);
+                filteredInvoices = filterByTotalCash(filteredInvoices, 0, 4999);
             } else if (totalCashOption.equals("5000-10000")) {
                 filteredInvoices = filterByTotalCash(filteredInvoices, 5000, 10000);
             } else if (totalCashOption.equals("10000-20000")) {
@@ -248,10 +291,10 @@ public class HistorySalesListActivity extends AppCompatActivity {
             }
         }
 
-        if(!filteredInvoices.isEmpty()) {
+        if (!filteredInvoices.isEmpty()) {
             adapterItemInvoice.updateData(filteredInvoices);
         } else {
-            CustomToast.showToastFailed(context,"Không tìm thấy hóa đơn nào");
+            CustomToast.showToastFailed(context, "Không tìm thấy hóa đơn nào");
         }
     }
 
@@ -354,11 +397,6 @@ public class HistorySalesListActivity extends AppCompatActivity {
             reloadSound.release();
         }
     }
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getAllInvoice();
-    }
 
     private void getAllInvoice() {
         databaseReference = FirebaseDatabase.getInstance().getReference("Invoices/" + user.getMobileNumber());
@@ -380,10 +418,10 @@ public class HistorySalesListActivity extends AppCompatActivity {
                             invoice.setChangeOfCustomer(invoiceSnapshot.child("changeOfCustomer").getValue(Integer.class));
                             invoice.setTotalQty(invoiceSnapshot.child("totalQty").getValue(Integer.class));
 
-                            ///tải hình ảnh
+                            // Tải hình ảnh
                             String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
                             invoice.setImageInvoice(imageUrl);
-                            /////////////////////////////////////////
+
                             List<MyBill.Item> items = new ArrayList<>();
                             for (DataSnapshot itemSnapshot : invoiceSnapshot.child("items").getChildren()) {
                                 MyBill.Item item = new MyBill.Item();
@@ -395,13 +433,31 @@ public class HistorySalesListActivity extends AppCompatActivity {
                             }
                             invoice.setItems(items);
 
+
                             invoiceList.add(invoice);
                         }
                     }
-                    //sắp xếp
+
                     Collections.sort(invoiceList, (invoice1, invoice2) -> {
-                        //
-                        return invoice2.getDateCreated().compareTo(invoice1.getDateCreated());
+                        try {
+                            Date date1 = sdf.parse(invoice1.getDateCreated());
+                            Date date2 = sdf.parse(invoice2.getDateCreated());
+                            return date2.compareTo(date1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
+                        }
+                    });
+
+                    Collections.sort(originalInvoiceList, (invoice1, invoice2) -> {
+                        try {
+                            Date date1 = sdf.parse(invoice1.getDateCreated());
+                            Date date2 = sdf.parse(invoice2.getDateCreated());
+                            return date2.compareTo(date1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
+                        }
                     });
                     noDataAvailable.setVisibility(View.GONE);
                     originalInvoiceList.clear();
@@ -419,6 +475,64 @@ public class HistorySalesListActivity extends AppCompatActivity {
             }
         });
     }
+
+
+//    private void getAllInvoice() {
+//        databaseReference = FirebaseDatabase.getInstance().getReference("Invoices/" + user.getMobileNumber());
+//        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                invoiceList.clear();
+//                if (dataSnapshot.exists()) {
+//                    for (DataSnapshot customerSnapshot : dataSnapshot.getChildren()) {
+//                        for (DataSnapshot invoiceSnapshot : customerSnapshot.getChildren()) {
+//                            MyBill invoice = new MyBill();
+//                            invoice.setCustomerMobileNum(invoiceSnapshot.child("customerMobileNum").getValue(String.class));
+//                            invoice.setCustomerName(invoiceSnapshot.child("customerName").getValue(String.class));
+//                            invoice.setInvoiceID(invoiceSnapshot.child("invoiceID").getValue(String.class));
+//                            invoice.setDateCreated(invoiceSnapshot.child("dateCreated").getValue(String.class));
+//                            invoice.setNote(invoiceSnapshot.child("note").getValue(String.class));
+//                            invoice.setTotalCash(invoiceSnapshot.child("totalCash").getValue(Integer.class));
+//                            invoice.setCustomerPaid(invoiceSnapshot.child("customerPaid").getValue(Integer.class));
+//                            invoice.setChangeOfCustomer(invoiceSnapshot.child("changeOfCustomer").getValue(Integer.class));
+//                            invoice.setTotalQty(invoiceSnapshot.child("totalQty").getValue(Integer.class));
+//
+//                            ///tải hình ảnh
+//                            String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
+//                            invoice.setImageInvoice(imageUrl);
+//                            /////////////////////////////////////////
+//                            List<MyBill.Item> items = new ArrayList<>();
+//                            for (DataSnapshot itemSnapshot : invoiceSnapshot.child("items").getChildren()) {
+//                                MyBill.Item item = new MyBill.Item();
+//                                item.setIdDrug(itemSnapshot.child("idDrug").getValue(String.class));
+//                                item.setDrugName(itemSnapshot.child("drugName").getValue(String.class));
+//                                item.setQtyDrug(itemSnapshot.child("qtyDrug").getValue(Integer.class));
+//                                item.setPrice(itemSnapshot.child("price").getValue(Integer.class));
+//                                items.add(item);
+//                            }
+//                            invoice.setItems(items);
+//
+//                            invoiceList.add(invoice);
+//                        }
+//                    }
+//                    //sắp xếp
+//                    Collections.sort(invoiceList, (invoice1, invoice2) -> invoice2.getDateCreated().compareTo(invoice1.getDateCreated()));
+//                    noDataAvailable.setVisibility(View.GONE);
+//                    originalInvoiceList.clear();
+//                    originalInvoiceList.addAll(invoiceList);
+//
+//                    adapterItemInvoice.notifyDataSetChanged();
+//                } else {
+//                    noDataAvailable.setVisibility(View.VISIBLE);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                // Xử lý khi có lỗi
+//            }
+//        });
+//    }
 
     private void deleteAInvoice() {
         SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(adapterItemInvoice, this);

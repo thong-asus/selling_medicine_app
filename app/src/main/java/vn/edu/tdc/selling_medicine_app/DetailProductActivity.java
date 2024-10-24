@@ -46,7 +46,7 @@ public class DetailProductActivity extends AppCompatActivity {
 
     private Toolbar toolbar_DetailProduct;
     private ImageView ivItemProduct;
-    private TextView qtySelling, expiryDate, sideEffects, dosage, indications, strength, form, price, drugName;
+    private TextView qtySelling, expiryDate, sideEffects, dosage, indications, strength, form, price, drugName, dateCreated;
     private Product product = new Product();
     private Context context;
     private String idDrug;
@@ -115,6 +115,7 @@ public class DetailProductActivity extends AppCompatActivity {
                     dosage.setText(product.getDosage());
                     sideEffects.setText(product.getSideEffects());
                     qtySelling.setText(FormatNumber.formatNumber(product.getQtySelling()));
+                    dateCreated.setText(product.getDateCreated());
                 }
             }
 
@@ -403,6 +404,7 @@ public class DetailProductActivity extends AppCompatActivity {
         form = findViewById(R.id.form);
         price = findViewById(R.id.price);
         drugName = findViewById(R.id.drugName);
+        dateCreated = findViewById(R.id.dateCreated);
     }
 
 

@@ -1,12 +1,15 @@
 package vn.edu.tdc.selling_medicine_app.fragment;
 
 import static android.content.ContentValues.TAG;
+import static android.view.View.GONE;
 import static vn.edu.tdc.selling_medicine_app.feature.FcmTokenManager.deleteTokenOnFireBase;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -22,41 +25,79 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
+import com.github.ybq.android.spinkit.style.WanderingCubes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import vn.edu.tdc.selling_medicine_app.ChangePasswordActivity;
 import vn.edu.tdc.selling_medicine_app.LoginActivity;
+import vn.edu.tdc.selling_medicine_app.ProductListActivity;
 import vn.edu.tdc.selling_medicine_app.R;
+import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.FcmTokenManager;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
+import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class SettingsFragment extends Fragment {
     private Toolbar toolbar_settings;
     private Button btnLogout;
+    private ProgressBar progressBar;
 
-
+    private LinearLayout linear_change_password;
     private User user = new User();
     private Context context;
+    private NetworkChangeReceiver networkChangeReceiver;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
+
         context = view.getContext();
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         //////////////////nhận dữ liệu user//////////
         user = ReceiveUserInfo.getUserInfo(context);
         /////////////////////////////////////////////
         setControl(view);
+        progressBar.setIndeterminateDrawable(new WanderingCubes());
         setEvent();
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        getActivity().registerReceiver(networkChangeReceiver, filter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(networkChangeReceiver);
+    }
     private void setEvent() {
+        linear_change_password.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getView().getContext(), ChangePasswordActivity.class);
+                startActivity(intent);
+            }
+        });
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,6 +108,7 @@ public class SettingsFragment extends Fragment {
                 builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        progressBar.setVisibility(View.VISIBLE);
                         ReceiveUserInfo.clearUserInfo(context);
                         FcmTokenManager.clearFcmToken(context);
                         FcmTokenManager.deleteTokenOnFireBase(context,user.getMobileNumber());
@@ -94,6 +136,8 @@ public class SettingsFragment extends Fragment {
                 Log.e(TAG, "Failed to clear FCM Token", task.getException());
             }
         });
+        progressBar.setVisibility(GONE);
+        CustomToast.showToastSuccessful(context,"Đăng xuất thành công!");
         Intent intent = new Intent(getActivity(), LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -101,6 +145,8 @@ public class SettingsFragment extends Fragment {
     private void setControl(View view) {
         toolbar_settings = view.findViewById(R.id.toolbar_settings);
         btnLogout = view.findViewById(R.id.btnLogout);
+        progressBar = view.findViewById(R.id.progressBar);
+        linear_change_password = view.findViewById(R.id.linear_change_password);
     }
 
 }

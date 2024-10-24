@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.journeyapps.barcodescanner.DecoratedBarcodeView
+        android:id="@+id/barcode_scanner"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:padding="16dp"
+        android:background="@android:color/white">
+
+        <Button
+            style="@style/prop_Button"
+            android:background="@drawable/bg_button_next_clicked"
+            android:id="@+id/button_flash"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="16dp"
+            android:text="Bật đèn" />
+
+        <Button
+            style="@style/prop_Button"
+            android:background="@drawable/bg_button_login_clicked"
+            android:id="@+id/button_gallery"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_margin="16dp"
+            android:text="Chọn ảnh" />
+
+
+
+    </LinearLayout>
+<!--    <ImageButton-->
+<!--        android:background="#FF0000"-->
+<!--        android:id="@+id/button_dismissdialog"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="40dp"-->
+<!--        android:layout_gravity="end|bottom"-->
+<!--        android:layout_margin="16dp"-->
+<!--        android:src="@drawable/ic_close" />-->
+    <!-- Close button -->
+
+
+</FrameLayout>

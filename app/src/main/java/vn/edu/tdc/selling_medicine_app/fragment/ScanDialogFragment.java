@@ -1,6 +1,7 @@
 package vn.edu.tdc.selling_medicine_app.fragment;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -16,14 +17,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.fragment.app.DialogFragment;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -55,8 +56,7 @@ import vn.edu.tdc.selling_medicine_app.R;
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
 
-
-public class ScanFragment extends Fragment {
+public class ScanDialogFragment extends DialogFragment {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
     private static final int PICK_IMAGE_REQUEST_CODE = 300;
 
@@ -73,7 +73,7 @@ public class ScanFragment extends Fragment {
     private String productName = "";
     private NetworkChangeReceiver networkChangeReceiver;
 
-    public ScanFragment() {
+    public ScanDialogFragment() {
         super();
 
         byte[] buf = new byte[16];
@@ -87,7 +87,7 @@ public class ScanFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.custom_scanner, container, false);
+        View view = inflater.inflate(R.layout.custom_scan_fragment, container, false);
 
         barcodeView = view.findViewById(R.id.barcode_scanner);
         barcodeView.getBarcodeView().getCameraSettings().setRequestedCameraId(0);
@@ -295,10 +295,8 @@ public class ScanFragment extends Fragment {
                         }
 
                         requireActivity().runOnUiThread(() -> {
-
-                            Intent intent = new Intent(context, PrePaymentActivity.class);
-                            intent.putExtra("drugName", productName);
-                            startActivity(intent);
+                            dismiss();
+                            ((PrePaymentActivity) requireActivity()).openAddMedicineToInvoiceDialog(productName);
                             Log.d("Tên sp: ",productName);
                         });
                     } else {

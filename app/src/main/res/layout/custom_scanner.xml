@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.ScanFragment">
+
+    <com.journeyapps.barcodescanner.DecoratedBarcodeView
+        android:id="@+id/barcode_scanner"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:background="@android:color/white">
+
+        <Button
+            android:layout_marginBottom="10dp"
+            android:id="@+id/button_flash"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/prop_Button"
+            android:background="@drawable/bg_button_next_clicked"
+            android:text="Bật đèn"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:layout_marginBottom="10dp"
+
+            android:id="@+id/button_gallery"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/prop_Button"
+            android:background="@drawable/bg_button_login_clicked"
+            android:text="Chọn ảnh"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+</FrameLayout>

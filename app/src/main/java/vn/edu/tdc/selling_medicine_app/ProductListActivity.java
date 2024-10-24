@@ -18,8 +18,10 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -70,6 +72,8 @@ import java.util.concurrent.TimeUnit;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.model.Product;
 import vn.edu.tdc.selling_medicine_app.feature.ReloadSound;
@@ -93,13 +97,15 @@ public class ProductListActivity extends AppCompatActivity {
     private ReloadSound reloadSound;
 
     private User user = new User();
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
     /////////////////////////////////////////////
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int CAMERA_REQUEST_CODE = 2;
     private static final int REQUEST_CAMERA_PERMISSION = 100;
     private ImageView ivMedicine;
     private Uri imageUri = null;
-
+    private NetworkChangeReceiver networkChangeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +113,10 @@ public class ProductListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_list);
         ////////////////////////////////////////////////
         context = this;
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         reloadSound = new ReloadSound(this);
         user = ReceiveUserInfo.getUserInfo(context);
         ////////////////////////////////////////////////
@@ -115,7 +125,20 @@ public class ProductListActivity extends AppCompatActivity {
         getAllProduct();
         deleteAProduct();
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getAllProduct();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(networkChangeReceiver);
+    }
     private void showFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.custom_dialog_filter_products, null);
@@ -190,18 +213,26 @@ public class ProductListActivity extends AppCompatActivity {
         if (!dateOption.equals("Không chọn")) {
             switch (dateOption) {
                 case "Mới nhất":
-                    Collections.sort(filteredProducts, new Comparator<Product>() {
-                        @Override
-                        public int compare(Product p1, Product p2) {
-                            return p2.getDateCreated().compareTo(p1.getDateCreated());
+                    Collections.sort(filteredProducts, (product1, product2) -> {
+                        try {
+                            Date date1 = sdf.parse(product1.getDateCreated());
+                            Date date2 = sdf.parse(product2.getDateCreated());
+                            return date2.compareTo(date1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
                 case "Cũ nhất":
-                    Collections.sort(filteredProducts, new Comparator<Product>() {
-                        @Override
-                        public int compare(Product p1, Product p2) {
-                            return p1.getDateCreated().compareTo(p2.getDateCreated());
+                    Collections.sort(filteredProducts, (product1, product2) -> {
+                        try {
+                            Date date1 = sdf.parse(product1.getDateCreated());
+                            Date date2 = sdf.parse(product2.getDateCreated());
+                            return date1.compareTo(date2);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
@@ -474,9 +505,7 @@ public class ProductListActivity extends AppCompatActivity {
     private void getAllProduct() {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Drugs/" + user.getMobileNumber());
 
-        Query query = databaseReference.orderByChild("dateCreated");
-
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 productList.clear();
@@ -495,26 +524,19 @@ public class ProductListActivity extends AppCompatActivity {
                 }
 
                 if (productList.isEmpty()) {
-                    noDataAvailable.setVisibility(VISIBLE);
+                    noDataAvailable.setVisibility(View.VISIBLE);
                 } else {
                     noDataAvailable.setVisibility(View.GONE);
-                    Collections.sort(productList, new Comparator<Product>() {
-                        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
-                        @Override
-                        public int compare(Product p1, Product p2) {
-                            try {
-                                Date date1 = dateFormat.parse(p1.getDateCreated());
-                                Date date2 = dateFormat.parse(p2.getDateCreated());
-                                // Sắp xếp giảm dần theo ngày
-                                return date2.compareTo(date1);
-                            } catch (ParseException e) {
-                                e.printStackTrace();
-                                return 0;
-                            }
-                        }
+                    Collections.sort(productList, (product1, product2) -> {
+                        return product1.getDrugName().compareToIgnoreCase(product2.getDrugName());
+                    });
+
+                    Collections.sort(originalProductList, (product1, product2) -> {
+                        return product1.getDrugName().compareToIgnoreCase(product2.getDrugName());
                     });
                 }
+
                 itemProductAdapter.notifyDataSetChanged();
             }
 
@@ -524,6 +546,8 @@ public class ProductListActivity extends AppCompatActivity {
             }
         });
     }
+
+
 
     private void showAddProductDialog() {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
@@ -808,12 +832,6 @@ public class ProductListActivity extends AppCompatActivity {
         if (reloadSound != null) {
             reloadSound.release();
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getAllProduct();
     }
 
     @Override

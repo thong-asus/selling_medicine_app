@@ -13,7 +13,7 @@
         android:id="@+id/toolbar_prePayment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="Thanh toán" />
+        app:title="Thông tin thanh toán" />
 
     <View
         android:layout_width="match_parent"
@@ -125,6 +125,11 @@
                 android:background="@drawable/bg_button_login_clicked"
                 android:text="Thêm thuốc vào đơn"
                 android:layout_marginBottom="10dp"/>
+            <TextView
+                android:id="@+id/tvDeleteDrug"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nhấn vào item để xóa thuốc"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rec_medicine_added_list"

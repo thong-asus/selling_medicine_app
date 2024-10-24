@@ -19,10 +19,13 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.github.ybq.android.spinkit.style.Circle;
+import com.github.ybq.android.spinkit.style.WanderingCubes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
@@ -33,9 +36,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
@@ -50,6 +56,7 @@ import vn.edu.tdc.selling_medicine_app.recycleview.Adapter_ItemPayment;
 public class PaymentActivity extends AppCompatActivity {
 
     private Toolbar toolbar_Payment;
+    private ProgressBar progressBar;
     private Button btnSaveBill;
     private ImageView ivMedicinePayment;
     private View viewPayment;
@@ -73,6 +80,8 @@ public class PaymentActivity extends AppCompatActivity {
         user = ReceiveUserInfo.getUserInfo(context);
         customer = new Customer();
         setControl();
+
+        progressBar.setIndeterminateDrawable(new WanderingCubes());
 
         ArrayList<String> selectedDrugIds = getIntent().getStringArrayListExtra("selectedDrugIds");
         if (selectedDrugIds != null) {
@@ -137,6 +146,7 @@ public class PaymentActivity extends AppCompatActivity {
         btnSaveBill.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                progressBar.setVisibility(View.VISIBLE);
                 if (imageUriString != null) {
                     Uri imageUri = getImageUriFromString(imageUriString);
                     if (invoiceID == null) {
@@ -254,9 +264,13 @@ public class PaymentActivity extends AppCompatActivity {
                                     Log.e("PaymentActivity", "idDrug không hợp lệ cho mục thuốc: " + item.getDrugName());
                                 }
                             }
+                            progressBar.setVisibility(View.GONE);
                             CustomToast.showToastSuccessful(context, "Hóa đơn đã được lưu thành công");
                             saveSomeInforInvoice(customerMobileNumber, invoiceID);
+                            ///////////////////////////////////////
                             updateCustomerStats(totalCashOne);
+                            saveRevenue(totalCashOne);
+
                             Intent intent = new Intent(PaymentActivity.this, PrePaymentActivity.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
@@ -269,6 +283,52 @@ public class PaymentActivity extends AppCompatActivity {
             CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
         }
     }
+
+    private String formatDateForFirebase(String date) {
+        return date.replace("/", "_");
+    }
+    private void saveRevenue(double totalCash) {
+        String userMobileNumber = user.getMobileNumber();
+        //String currentDate = GetCurrentDate.getCurrentDateString();
+
+        //////////format ngày tháng năm
+        SimpleDateFormat format = new SimpleDateFormat("dd_MM_yyyy", Locale.getDefault());
+        Calendar calendar = Calendar.getInstance();
+        String todayStr = format.format(calendar.getTime());
+
+        String firebaseDateKey = formatDateForFirebase(todayStr);
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("Revenue").child(userMobileNumber).child(firebaseDateKey);
+
+        databaseReference.child("totalDailyMoney").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                double currentTotalMoney = 0;
+                if (snapshot.exists()) {
+                    // Lấy giá trị hiện tại của totalDailyMoney từ Firebase
+                    currentTotalMoney = snapshot.getValue(Double.class);
+                }
+                // Cộng thêm số tiền của hóa đơn mới vào totalDailyMoney
+                double updatedTotalMoney = currentTotalMoney + totalCash;
+                // Lưu giá trị mới của totalDailyMoney vào Firebase
+                databaseReference.child("totalDailyMoney").setValue(updatedTotalMoney).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Log.d("Success", "Revenue updated");
+                        } else {
+                            Log.d("Fail", "Revenue update failed");
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d("Fail read", "Revenue read cancelled");
+            }
+        });
+    }
+
 
     private void saveSomeInforInvoice(String customerMobileNumber, String idInvoice) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("InvoiceCustomer/" + "/" + user.getMobileNumber() + "/" + customerMobileNumber);
@@ -393,6 +453,7 @@ public class PaymentActivity extends AppCompatActivity {
         btnSaveBill = findViewById(R.id.btnSaveBill);
         viewPayment = findViewById(R.id.viewPayment);
         totalQtyDrug = findViewById(R.id.totalQtyDrug);
+        progressBar = findViewById(R.id.progressBar);
 
         viewPayment.setOnTouchListener(new View.OnTouchListener() {
             @Override

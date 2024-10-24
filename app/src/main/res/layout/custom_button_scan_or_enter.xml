@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:orientation="horizontal"
+    android:gravity="center_horizontal">
+    <Button
+        android:id="@+id/btnWrite"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        style="@style/prop_Button_Prepayment"
+        android:background="@drawable/bg_button_login_clicked"
+        android:text="Nhập tay"/>
+    <Button
+        android:id="@+id/btnScan"
+        android:layout_marginStart="5dp"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        style="@style/prop_Button_Prepayment"
+        android:background="@drawable/bg_button_next_clicked"
+        android:text="Quét mã"/>
+</LinearLayout>

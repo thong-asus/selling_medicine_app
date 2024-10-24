@@ -14,6 +14,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -40,6 +42,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -48,6 +52,8 @@ import java.util.Date;
 import java.util.List;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.feature.SwipeToDelete;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
@@ -70,6 +76,10 @@ public class CustomerListActivity extends AppCompatActivity {
     private ReloadSound reloadSound;
     private  User user = new User();
     private ImageView btn_filter_customerList;
+    private NetworkChangeReceiver networkChangeReceiver;
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +89,10 @@ public class CustomerListActivity extends AppCompatActivity {
         context = this;
         user = ReceiveUserInfo.getUserInfo(context);
 
-
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
 
         /////////////////////////////
         reloadSound = new ReloadSound(this);
@@ -89,7 +102,20 @@ public class CustomerListActivity extends AppCompatActivity {
         deleteACustomer();
         setEvent();
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getAllCustomer();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(networkChangeReceiver);
+    }
     private void showFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.custom_dialog_filter_customers, null);
@@ -165,20 +191,43 @@ public class CustomerListActivity extends AppCompatActivity {
             Date startDate = null;
             Date endDate = null;
 
+
             switch (dateOption) {
                 case "Mới nhất":
-                    Collections.sort(filteredCustomers, new Comparator<Customer>() {
-                        @Override
-                        public int compare(Customer c1, Customer c2) {
-                            return c2.getDateCreated().compareTo(c1.getDateCreated());
+                    Collections.sort(filteredCustomers, (customer1, customer2) -> {
+                        try {
+                            String date1Str = customer1.getDateCreated();
+                            String date2Str = customer2.getDateCreated();
+
+                            if (date1Str == null || date2Str == null) {
+                                return 0;
+                            }
+
+                            Date date1 = sdf.parse(date1Str);
+                            Date date2 = sdf.parse(date2Str);
+                            return date2.compareTo(date1);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
                 case "Cũ nhất":
-                    Collections.sort(filteredCustomers, new Comparator<Customer>() {
-                        @Override
-                        public int compare(Customer c1, Customer c2) {
-                            return c1.getDateCreated().compareTo(c2.getDateCreated());
+                    Collections.sort(filteredCustomers, (customer1, customer2) -> {
+                        try {
+                            String date1Str = customer1.getDateCreated();
+                            String date2Str = customer2.getDateCreated();
+
+                            if (date1Str == null || date2Str == null) {
+                                return 0;
+                            }
+
+                            Date date1 = sdf.parse(date1Str);
+                            Date date2 = sdf.parse(date2Str);
+                            return date1.compareTo(date2);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
                         }
                     });
                     break;
@@ -406,11 +455,6 @@ public class CustomerListActivity extends AppCompatActivity {
             reloadSound.release();
         }
     }
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getAllCustomer();
-    }
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -454,19 +498,12 @@ public class CustomerListActivity extends AppCompatActivity {
                     noDataAvailable.setVisibility(VISIBLE);
                 } else {
                     noDataAvailable.setVisibility(GONE);
-
-                    Collections.sort(customerList, new Comparator<Customer>() {
-                        @Override
-                        public int compare(Customer c1, Customer c2) {
-                            return c2.getDateCreated().compareTo(c1.getDateCreated());
-                        }
+                    Collections.sort(customerList, (product1, product2) -> {
+                        return product1.getCustomerName().compareToIgnoreCase(product2.getCustomerName());
                     });
 
-                    Collections.sort(originalCustomerList, new Comparator<Customer>() {
-                        @Override
-                        public int compare(Customer c1, Customer c2) {
-                            return c2.getDateCreated().compareTo(c1.getDateCreated());
-                        }
+                    Collections.sort(customerList, (product1, product2) -> {
+                        return product1.getCustomerName().compareToIgnoreCase(product2.getCustomerName());
                     });
                 }
 
@@ -481,10 +518,11 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
 
+
     private void deleteACustomer() {
-        SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(itemCustomerAdapter, this);
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeToDeleteCallback);
-        itemTouchHelper.attachToRecyclerView(recyclerView_customerList);
+            SwipeToDelete swipeToDeleteCallback = new SwipeToDelete(itemCustomerAdapter, this);
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeToDeleteCallback);
+            itemTouchHelper.attachToRecyclerView(recyclerView_customerList);
     }
 
     @Override

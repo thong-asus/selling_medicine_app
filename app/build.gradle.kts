@@ -35,6 +35,7 @@ android {
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
+    //implementation ("com.google.android.material:material:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -47,12 +48,18 @@ dependencies {
     implementation ("com.google.firebase:firebase-storage")
     implementation ("com.google.firebase:firebase-messaging")
     implementation ("com.google.code.gson:gson:2.8.8")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.0")
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("com.google.firebase:firebase-database")
+    implementation ("androidx.work:work-runtime:2.7.1")
     implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
     implementation ("com.github.bumptech.glide:glide:4.15.1")
-    //implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
-    //implementation ("com.google.zxing:core:3.3.0")
-
+    ////custom progressbar
+    implementation ("com.github.ybq:Android-SpinKit:1.4.0")
+    /////////////scan
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation ("com.google.zxing:core:3.3.0")
+    //////////////chart
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

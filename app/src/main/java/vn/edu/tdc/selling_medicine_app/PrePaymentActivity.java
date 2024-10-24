@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,20 +41,19 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.GetCurrentDate;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
+import vn.edu.tdc.selling_medicine_app.fragment.ScanDialogFragment;
 import vn.edu.tdc.selling_medicine_app.model.Customer;
 import vn.edu.tdc.selling_medicine_app.model.MyBill;
 import vn.edu.tdc.selling_medicine_app.model.Product;
@@ -64,7 +64,7 @@ public class PrePaymentActivity extends AppCompatActivity {
 
     private ImageView ivMedicinePrePayment;
     private TextInputEditText edtCustomerMobileNum, edtCustomerName, edtNote, edtTotalCash, edtCustomerPaid;
-    private TextView dateCreated;
+    private TextView dateCreated, tvDeleteDrug;
     private Button nextPayment, btnAddMedicine;
     private Toolbar toolbar_prePayment;
     private View viewPrePayment;
@@ -85,29 +85,21 @@ public class PrePaymentActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int CAMERA_REQUEST_CODE = 2;
     private static final int REQUEST_CAMERA_PERMISSION = 100;
+    private static final int SCAN_REQUEST_CODE = 100;
     private Uri imageUri = null;
 
+    private String drugName = "";
+    private String customerName;
+    private String customerPhoneNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pre_payment);
-//        context = this;
-//        user = ReceiveUserInfo.getUserInfo(context);
 
-//        Intent intent = getIntent();
-//        if (intent.hasExtra("customerInfo")) {
-//            customer = (Customer) intent.getSerializableExtra("customerInfo");
-//        }
-//        setControl();
-//        setEvent();
-//
-//        productArrayList = new ArrayList<>();
-//        adapterItemMedicineAddedPrePayment = new Adapter_ItemMedicineAddedPrePayment(productArrayList, context);
-//        rec_medicine_added_list.setAdapter(adapterItemMedicineAddedPrePayment);
-//        rec_medicine_added_list.setLayoutManager(new LinearLayoutManager(this));
-//
-//        loadCustomerList();
+        Intent intent = getIntent();
+        String drugName = intent.getStringExtra("drugName");
+
         context = this;
         user = ReceiveUserInfo.getUserInfo(context);
 
@@ -115,15 +107,27 @@ public class PrePaymentActivity extends AppCompatActivity {
         setEvent();
 
         productArrayList = new ArrayList<>();
+        productArrayList.clear();
         adapterItemMedicineAddedPrePayment = new Adapter_ItemMedicineAddedPrePayment(productArrayList, context);
         rec_medicine_added_list.setAdapter(adapterItemMedicineAddedPrePayment);
         rec_medicine_added_list.setLayoutManager(new LinearLayoutManager(this));
+
+        adapterItemMedicineAddedPrePayment.notifyDataSetChanged();
+
+        if (drugName != null) {
+            openAddMedicineToInvoiceDialog(drugName);
+        }
 
         loadCustomerList();
         //deleteDrugInvoicePrePayment();
         //getCustomerInfo();
         //sendInvoiceToPayment();
     }
+//    @Override
+//    public void onScanResult(String result) {
+//        // Xử lý kết quả quét tại đây
+//        openAddMedicineToInvoiceDialog(result);
+//    }
 
 
     private void setEvent() {
@@ -174,7 +178,7 @@ public class PrePaymentActivity extends AppCompatActivity {
         btnAddMedicine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openAddMedicineToInvoiceDialog();
+                openOptionsAddDrug();
             }
         });
         nextPayment.setOnClickListener(new View.OnClickListener() {
@@ -264,13 +268,13 @@ public class PrePaymentActivity extends AppCompatActivity {
             }
         });
     }
-
     private void fetchDrugNames(final AutoCompleteTextView autoCompleteDrugName) {
         DatabaseReference drugsRef = FirebaseDatabase.getInstance().getReference("Drugs/" + user.getMobileNumber());
         drugsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<String> drugNames = new ArrayList<>();
+                drugIdMap.clear();
                 for (DataSnapshot drugSnapshot : snapshot.getChildren()) {
                     String idDrug = drugSnapshot.getKey();
                     String drugName = drugSnapshot.child("drugName").getValue(String.class);
@@ -285,13 +289,32 @@ public class PrePaymentActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                //CustomToast.showToastFailed(context, "Đã xảy ra lỗi khi tải danh sách thuốc");
                 Log.d("Lỗi tải DS Thuốc: ", "Xảy ra lỗi khi tải ds thuốc");
             }
         });
     }
 
-    public void openAddMedicineToInvoiceDialog() {
+    private void openOptionsAddDrug() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.custom_button_scan_or_enter, null);
+        builder.setView(dialogView);
+        builder.setTitle("Chọn cách thêm");
+
+        Button btnWrite = dialogView.findViewById(R.id.btnWrite);
+        Button btnScan = dialogView.findViewById(R.id.btnScan);
+
+        btnWrite.setOnClickListener(v -> openAddMedicineToInvoiceDialog(""));
+
+        btnScan.setOnClickListener(v -> {
+            DialogFragment scanDialog = new ScanDialogFragment();
+            scanDialog.setTargetFragment(null, SCAN_REQUEST_CODE); // Optional: Set target fragment if needed
+            scanDialog.show(getSupportFragmentManager(), "ScanDialog");
+        });
+
+        builder.create().show();
+    }
+    public void openAddMedicineToInvoiceDialog(String scannedDrugName) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.custom_dialog_add_medicine_to_invoice, null);
@@ -300,45 +323,45 @@ public class PrePaymentActivity extends AppCompatActivity {
         final AutoCompleteTextView autoCompleteDrugName = dialogView.findViewById(R.id.drugNameInvoice);
         final TextInputEditText editTextQty = dialogView.findViewById(R.id.qtyDrugInvoice);
 
+        // Set the scanned drug name in the AutoCompleteTextView
+        if (!scannedDrugName.isEmpty()) {
+            autoCompleteDrugName.setText(scannedDrugName);
+        }
+
+        // Fetch drug names for the AutoCompleteTextView
         fetchDrugNames(autoCompleteDrugName);
 
-        builder.setPositiveButton("Thêm", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String drugName = autoCompleteDrugName.getText().toString().trim();
-                String qtyStr = editTextQty.getText().toString().trim();
+        builder.setPositiveButton("Thêm", (dialog, which) -> {
+            String enteredDrugName = autoCompleteDrugName.getText().toString().trim();
+            String qtyStr = editTextQty.getText().toString().trim();
 
-                if (!drugName.isEmpty() && !qtyStr.isEmpty()) {
-                    try {
-                        int qty = Integer.parseInt(qtyStr);
-                        String idDrug = drugIdMap.get(drugName); // Lấy idDrug từ drugIdMap
-                        if (idDrug != null) {
-                            Product newProduct = new Product(idDrug, drugName, qty);
-                            productArrayList.add(newProduct);
-                            selectedDrugIds.add(idDrug);
-                            adapterItemMedicineAddedPrePayment.notifyDataSetChanged();
+            if (!enteredDrugName.isEmpty() && !qtyStr.isEmpty()) {
+                try {
+                    int qty = Integer.parseInt(qtyStr);
+                    String drugId = drugIdMap.get(enteredDrugName);
 
-
-                            CustomToast.showToastSuccessful(context, "Thêm thuốc vào đơn thành công");
-                        } else {
-                            CustomToast.showToastFailed(context, "Không tìm thấy id thuốc");
-                        }
-                    } catch (NumberFormatException e) {
-                        CustomToast.showToastFailed(context, "Số lượng không hợp lệ");
+                    if (drugId != null) {
+                        // Existing drug, add it to the list
+                        Product newProduct = new Product(drugId, enteredDrugName, qty);
+                        productArrayList.add(newProduct);
+                        selectedDrugIds.add(drugId);
+                    } else {
+                        // New drug, create a new ID and add it to the list
+                        String newId = UUID.randomUUID().toString();
+                        Product newProduct = new Product(newId, enteredDrugName, qty);
+                        productArrayList.add(newProduct);
                     }
-                } else {
-                    CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin");
+                    adapterItemMedicineAddedPrePayment.notifyDataSetChanged();
+                    CustomToast.showToastSuccessful(context, "Thêm thuốc vào đơn thành công");
+                } catch (NumberFormatException e) {
+                    CustomToast.showToastFailed(context, "Số lượng không hợp lệ");
                 }
+            } else {
+                CustomToast.showToastFailed(context, "Vui lòng nhập đầy đủ thông tin thuốc");
             }
         });
 
-
-        builder.setNegativeButton("Hủy", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -516,6 +539,7 @@ public class PrePaymentActivity extends AppCompatActivity {
         viewPrePayment = findViewById(R.id.viewPrePayment);
         edtCustomerPaid = findViewById(R.id.edtCustomerPaid);
         edtTotalCash = findViewById(R.id.edtTotalCash);
+        tvDeleteDrug = findViewById(R.id.tvDeleteDrug);
 
         ivMedicinePrePayment.setOnClickListener(v -> {
             showImagePickDialog();

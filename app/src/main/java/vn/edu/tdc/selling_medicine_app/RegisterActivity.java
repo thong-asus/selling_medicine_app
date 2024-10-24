@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -42,6 +44,8 @@ import java.util.concurrent.TimeUnit;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.HashUtil;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -56,6 +60,7 @@ public class RegisterActivity extends AppCompatActivity {
     private Long timeoutSeconds = 60L;
     private String verificationCode = "", codesms = "";
     private User user = new User();
+    private NetworkChangeReceiver networkChangeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +68,25 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         context = this;
         setControl();
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         setEvent();
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(networkChangeReceiver);
+    }
     private void setEvent() {
         btnSendOTP.setOnClickListener(new View.OnClickListener() {
             @Override

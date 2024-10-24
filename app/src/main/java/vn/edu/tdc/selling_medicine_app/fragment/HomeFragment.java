@@ -4,6 +4,8 @@ import static android.content.ContentValues.TAG;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -30,11 +32,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import vn.edu.tdc.selling_medicine_app.CustomerListActivity;
@@ -42,6 +48,10 @@ import vn.edu.tdc.selling_medicine_app.HistorySalesListActivity;
 import vn.edu.tdc.selling_medicine_app.PrePaymentActivity;
 import vn.edu.tdc.selling_medicine_app.ProductListActivity;
 import vn.edu.tdc.selling_medicine_app.R;
+import vn.edu.tdc.selling_medicine_app.StatisticActivity;
+import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
 import vn.edu.tdc.selling_medicine_app.model.MyBill;
 import vn.edu.tdc.selling_medicine_app.model.User;
@@ -60,6 +70,8 @@ public class HomeFragment extends Fragment {
 
     private ArrayList<MyBill> recentInvoiceList;
     private DatabaseReference databaseReference;
+    private NetworkChangeReceiver networkChangeReceiver;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -70,6 +82,11 @@ public class HomeFragment extends Fragment {
         setControl(view);
         ////////////////////////////////////////////////
         FirebaseApp.initializeApp(context);
+        ///////////////////////////KIỂM TRA KẾT NỐI INTERNET/////////////////////
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         //Khởi tạo db
         databaseReference = FirebaseDatabase.getInstance().getReference();
         setEvent();
@@ -78,10 +95,20 @@ public class HomeFragment extends Fragment {
         getCustomerMobiles();
         return view;
     }
+
     @Override
     public void onResume() {
         super.onResume();
         getCustomerMobiles();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        getActivity().registerReceiver(networkChangeReceiver, filter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(networkChangeReceiver);
     }
 
     private void showItemInvoicesRecent() {
@@ -116,6 +143,7 @@ public class HomeFragment extends Fragment {
                                 invoice.setDateCreated((String) invoiceMap.get("dateCreated"));
                                 invoice.setTotalCash(((Long) invoiceMap.get("totalCash")).intValue());
                                 invoice.setTotalQty(((Long) invoiceMap.get("totalQty")).intValue());
+                                invoice.setChangeOfCustomer(((Long) invoiceMap.get("changeOfCustomer")).intValue());
 
                                 String imageUrl = invoiceSnapshot.child("imageInvoice").getValue(String.class);
                                 invoice.setImageInvoice(imageUrl);
@@ -143,13 +171,23 @@ public class HomeFragment extends Fragment {
                     }
                 }
 
+                // Sắp xếp các hóa đơn theo ngày tạo
                 Collections.sort(allInvoices, new Comparator<MyBill>() {
                     @Override
                     public int compare(MyBill o1, MyBill o2) {
-                        return o2.getDateCreated().compareTo(o1.getDateCreated());
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+                            Date date1 = sdf.parse(o1.getDateCreated());
+                            Date date2 = sdf.parse(o2.getDateCreated());
+                            return date2.compareTo(date1); // Sắp xếp giảm dần
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            return 0;
+                        }
                     }
                 });
 
+                // Lấy 5 hóa đơn mới nhất
                 List<MyBill> latestInvoices = allInvoices.subList(0, Math.min(5, allInvoices.size()));
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
@@ -168,6 +206,7 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
 
     private void getCustomerMobiles() {
         databaseReference.child("InvoiceCustomer/" + user.getMobileNumber()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -190,7 +229,10 @@ public class HomeFragment extends Fragment {
     }
 
     private void setEvent() {
-        btn_statistic.setOnClickListener(v -> Toast.makeText(context, "Chuyển sang màn hình thống kê", Toast.LENGTH_SHORT).show());
+        btn_statistic.setOnClickListener(v -> {
+            Intent intent = new Intent(context, StatisticActivity.class);
+            startActivity(intent);
+        });
         btn_payment.setOnClickListener(v -> {
             Intent intent = new Intent(context, PrePaymentActivity.class);
             startActivity(intent);
@@ -200,7 +242,7 @@ public class HomeFragment extends Fragment {
             startActivity(intent);
         });
         btn_inventory.setOnClickListener(v -> {
-
+            CustomToast.showToastFailed(context, "Tính năng đang được phát triển!");
         });
         btn_customer.setOnClickListener(v -> {
             Intent intent = new Intent(context, CustomerListActivity.class);

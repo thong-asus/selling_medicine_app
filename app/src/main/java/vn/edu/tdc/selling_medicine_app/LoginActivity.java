@@ -1,13 +1,17 @@
 package vn.edu.tdc.selling_medicine_app;
 
 import static android.content.ContentValues.TAG;
+import static android.view.View.GONE;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.drawable.RotateDrawable;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -16,10 +20,15 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.github.ybq.android.spinkit.SpinKitView;
+import com.github.ybq.android.spinkit.style.Circle;
+import com.github.ybq.android.spinkit.style.FadingCircle;
+import com.github.ybq.android.spinkit.style.RotatingCircle;
+import com.github.ybq.android.spinkit.style.WanderingCubes;
+import com.github.ybq.android.spinkit.style.Wave;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
@@ -27,16 +36,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
 
 import vn.edu.tdc.selling_medicine_app.feature.CustomToast;
 import vn.edu.tdc.selling_medicine_app.feature.FcmTokenManager;
 import vn.edu.tdc.selling_medicine_app.feature.HashUtil;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkChangeReceiver;
+import vn.edu.tdc.selling_medicine_app.feature.NetworkUtil;
 import vn.edu.tdc.selling_medicine_app.feature.ReceiveUserInfo;
-import vn.edu.tdc.selling_medicine_app.feature.ShowMessage;
-import vn.edu.tdc.selling_medicine_app.fragment.HomeFragment;
 import vn.edu.tdc.selling_medicine_app.model.User;
 
 public class LoginActivity extends AppCompatActivity {
@@ -49,6 +57,9 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference databaseReference;
 
+    private NetworkChangeReceiver networkChangeReceiver;
+    private ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,10 +69,33 @@ public class LoginActivity extends AppCompatActivity {
         //////////////////////////////////////////////
         context = this;
         setControl();
+
+        progressBar.setIndeterminateDrawable(new WanderingCubes());
+        //progressBar.setDrawingCacheBackgroundColor(getResources().getColor(android.R.color.holo_orange_dark));
+
+
+        networkChangeReceiver = new NetworkChangeReceiver();
+        if (!NetworkUtil.isNetworkAvailable(context)) {
+            CustomToast.showToastFailed(context, "Không có kết nối internet!!!");
+        }
         setEvent();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(networkChangeReceiver);
+    }
     private void setEvent() {
+
         tvForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,13 +104,16 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         btnLogin.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
+                progressBar.setVisibility(View.VISIBLE);
                 String inputMobileNumber = mobileNumber.getText().toString().trim();
                 String inputPassword = password.getText().toString().trim();
 
                 if (inputMobileNumber.isEmpty() || inputPassword.isEmpty()) {
                     CustomToast.showToastFailed(context, "Vui lòng điền thông tin đăng nhập!");
+                    progressBar.setVisibility(GONE);
                     return;
                 }
 
@@ -91,7 +128,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (user != null && user.getPassword().equals(hashedInputPassword)) {
                                 // Đăng nhập thành công
                                 CustomToast.showToastSuccessful(context, "Đăng nhập thành công ^^");
-
+                                progressBar.setVisibility(GONE);
                                 SharedPreferences sharedPreferences = getSharedPreferences("informationUser", Context.MODE_PRIVATE);
                                 Gson gsonUser = new Gson();
                                 String jsonUser = gsonUser.toJson(user);
@@ -101,7 +138,7 @@ public class LoginActivity extends AppCompatActivity {
                                 editor.apply();
 
 
-                                ReceiveUserInfo.saveUserInfo(context,user);
+                                ReceiveUserInfo.saveUserInfo(context, user);
 
                                 FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
@@ -127,15 +164,18 @@ public class LoginActivity extends AppCompatActivity {
                                 finish();
                             } else {
                                 CustomToast.showToastFailed(context, "Sai mật khẩu!");
+                                progressBar.setVisibility(GONE);
                             }
                         } else {
                             CustomToast.showToastFailed(context, "Tài khoản không tồn tại!");
+                            progressBar.setVisibility(GONE);
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         CustomToast.showToastFailed(context, "Lỗi không thể truy vấn!");
+                        progressBar.setVisibility(GONE);
                     }
                 });
             }
@@ -192,6 +232,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         btnRegister = findViewById(R.id.btnRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
     }
 
     private void hideKeyboard() {

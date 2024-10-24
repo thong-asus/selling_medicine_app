@@ -39,17 +39,19 @@ public class Adapter_ItemMedicineAddedPrePayment extends RecyclerView.Adapter<It
         Product product = productList.get(position);
         holder.bind(product);
 
-        holder.itemView.setOnClickListener(view -> {
-            showDeleteConfirmationDialog(position);
-        });
-
-        if (productList.size() > 1 && position < productList.size() - 1) {
-            holder.viewLine.setVisibility(View.VISIBLE);
+        if (productList.size() > 1) {
+            if (position < productList.size() - 1) {
+                holder.viewLine.setVisibility(View.VISIBLE);
+            } else {
+                holder.viewLine.setVisibility(View.GONE);
+            }
         } else {
             holder.viewLine.setVisibility(View.GONE);
         }
 
+        holder.itemView.setOnClickListener(view -> showDeleteConfirmationDialog(position));
     }
+
 
     private void showDeleteConfirmationDialog(int position) {
         AlertDialog alertDialog = new AlertDialog.Builder(context)
@@ -58,6 +60,7 @@ public class Adapter_ItemMedicineAddedPrePayment extends RecyclerView.Adapter<It
                 .setPositiveButton("Có", (dialog, which) -> {
                     productList.remove(position);
                     notifyItemRemoved(position);
+                    notifyDataSetChanged();
                     CustomToast.showToastSuccessful(context, "Xóa thuốc khỏi đơn thành công");
                 })
                 .setNegativeButton("Không", (dialog, which) -> {
